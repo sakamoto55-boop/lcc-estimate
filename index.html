@@ -5,726 +5,1178 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="LCC見積">
-<title>LCC株式会社 解体・片付け統合見積システム</title>
+<meta name="theme-color" content="#0a2a5e">
+<title>LCC株式会社 統合見積システム</title>
+
+<!-- PWA manifest (inline) -->
+<link rel="manifest" href='data:application/manifest+json,{"name":"LCC統合見積システム","short_name":"LCC見積","start_url":".","display":"standalone","background_color":"%230a2a5e","theme_color":"%230a2a5e","icons":[]}'>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Crect width='180' height='180' fill='%230a2a5e'/%3E%3Ctext x='90' y='118' font-size='90' font-weight='900' text-anchor='middle' fill='white' font-family='sans-serif'%3EL%3Ctspan fill='%23ff7a18'%3EC%3C/tspan%3EC%3C/text%3E%3C/svg%3E">
+
+<script src="https://cdn.jsdelivr.net/npm/vue@3.4.21/dist/vue.global.prod.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 <style>
   :root{
-    --lcc-navy:#0a2a66;       /* ブルー基調（メイン） */
-    --lcc-navy-deep:#06183d;  /* 濃紺 */
-    --lcc-blue:#1f5fd1;       /* 明るいブルー（アクセント） */
-    --lcc-orange:#ff8a1e;     /* オレンジ（差し色・枠） */
-    --lcc-dark:#0b1220;
+    --lcc-navy:#0a2a5e; --lcc-navy-deep:#06183a; --lcc-blue:#1d6fe0;
+    --lcc-orange:#ff7a18; --lcc-orange-soft:#ffb066;
   }
-  *{ -webkit-tap-highlight-color: transparent; }
-  html,body{ margin:0; padding:0; background:#eef1f6; }
-  body{
-    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif;
-    font-size:16px;
-    -webkit-text-size-adjust:100%;
-  }
-  /* 入力要素は16px以上でズーム誤作動防止 */
-  input,select,textarea,button{ font-size:16px; }
-  input[type="number"]{ -moz-appearance:textfield; }
-  input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
-
-  /* ===== オープニングアニメーション（ブルー基調＋オレンジ枠） ===== */
-  #opening{
-    position:fixed; inset:0; z-index:9999;
-    background:radial-gradient(ellipse at center, #11337a 0%, #06183d 70%, #030c20 100%);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    overflow:hidden;
-  }
-  #opening.fade-out{ animation: openFade 1s ease forwards; }
-  @keyframes openFade{ to{ opacity:0; visibility:hidden; } }
-
-  /* ロゴをオレンジの枠で囲むデザイン */
-  .op-frame{
-    position:relative;
-    padding:18px 34px;
-    border:3px solid var(--lcc-orange);
-    border-radius:14px;
-    box-shadow:0 0 30px rgba(255,138,30,.55), inset 0 0 22px rgba(255,138,30,.18);
-    opacity:0;
-    animation: frameIn 1.1s cubic-bezier(.2,.7,.2,1) 1.4s forwards;
-  }
-  @keyframes frameIn{
-    0%{ opacity:0; transform:scale(1.25); clip-path:inset(0 50% 0 50%); }
-    100%{ opacity:1; transform:scale(1); clip-path:inset(0 0 0 0); }
-  }
-  .op-logo{
-    font-weight:900; letter-spacing:.16em; color:#fff;
-    font-size:21vw; line-height:1; position:relative;
-    text-shadow:0 0 34px rgba(31,95,209,.65);
-    animation: logoIn 2.4s cubic-bezier(.2,.7,.2,1) forwards;
-  }
-  .op-logo span{ color:var(--lcc-orange); }
-  @media(min-width:640px){ .op-logo{ font-size:140px; } }
-  @keyframes logoIn{
-    0%{ transform:scale(2.6); opacity:0; filter:blur(14px); letter-spacing:.5em; }
-    30%{ opacity:1; filter:blur(0); }
-    70%{ transform:scale(1); opacity:1; letter-spacing:.16em; }
-    100%{ transform:scale(1); opacity:1; }
-  }
-  .op-sub{
-    margin-top:20px; color:#dbe6ff; letter-spacing:.5em;
-    font-size:15px; opacity:0; transform:translateY(10px);
-    animation: subIn .9s ease 1.8s forwards;
-  }
-  .op-sub2{
-    margin-top:8px; color:#7d93c4; letter-spacing:.42em;
-    font-size:11px; opacity:0;
-    animation: subIn .9s ease 2.2s forwards;
-  }
-  @keyframes subIn{ to{ opacity:1; transform:translateY(0); } }
-  .op-line{
-    margin-top:22px; width:0; height:2px;
-    background:var(--lcc-orange);
-    box-shadow:0 0 12px var(--lcc-orange);
-    animation: lineIn 1.2s ease 2.1s forwards;
-  }
-  @keyframes lineIn{ to{ width:170px; } }
-
-  .tab-active{ color:var(--lcc-navy); }
-  .seg-btn{ transition:all .15s ease; }
+  *{ -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; background:#eef1f6; font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif; color:#1f2937; }
+  input,select,textarea,button{ font-size:16px; } /* iOS zoom防止 */
   .card{ background:#fff; border-radius:16px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
-  .safe-bottom{ padding-bottom: calc(env(safe-area-inset-bottom) + 76px); }
-  .nav-safe{ padding-bottom: env(safe-area-inset-bottom); }
-
-  /* ===== 見積書プレビュー（A4） ===== */
-  .a4{
-    width:210mm; min-height:297mm; background:#fff; color:#111;
-    padding:14mm 12mm; box-sizing:border-box; margin:0 auto;
-    font-size:11pt;
-  }
-  .a4 table{ width:100%; border-collapse:collapse; }
-  .a4 .est-tbl th,.a4 .est-tbl td{ border:1px solid #444; padding:4px 6px; }
-  .a4 .cat-row td{ background:#e8eefb; font-weight:700; color:var(--lcc-navy); }
+  .safe-bottom{ padding-bottom:calc(86px + env(safe-area-inset-bottom)); }
+  .nav-safe{ padding-bottom:env(safe-area-inset-bottom); }
+  .tab-active{ color:var(--lcc-navy); }
+  .seg-btn{ transition:.15s; }
+  .num-tag{ width:38px; height:38px; display:flex; align-items:center; justify-content:center; }
+  /* オープニング：ブルー基調＋オレンジ枠 */
+  #opening{ position:fixed; inset:0; z-index:100; background:radial-gradient(circle at 50% 40%, #123a78 0%, #06183a 70%); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  #opening.hide{ animation:opFade .7s ease forwards; }
+  @keyframes opFade{ to{ opacity:0; visibility:hidden; } }
+  .op-logo{ position:relative; padding:18px 30px; border:4px solid var(--lcc-orange); border-radius:14px; opacity:0; transform:scale(.6); animation:opPop 1.1s cubic-bezier(.2,.8,.2,1) .2s forwards; box-shadow:0 0 40px rgba(255,122,24,.35); }
+  .op-logo span{ font-size:64px; font-weight:900; letter-spacing:.06em; color:#fff; line-height:1; }
+  .op-logo span em{ color:var(--lcc-orange); font-style:normal; }
+  .op-sweep{ position:absolute; inset:0; border-radius:10px; overflow:hidden; }
+  .op-sweep::after{ content:""; position:absolute; top:0; left:-60%; width:50%; height:100%; background:linear-gradient(120deg,transparent,rgba(255,255,255,.55),transparent); transform:skewX(-20deg); animation:opSweep 1.2s ease 1s 1; }
+  @keyframes opSweep{ to{ left:130%; } }
+  @keyframes opPop{ 0%{opacity:0;transform:scale(.6)} 60%{opacity:1;transform:scale(1.06)} 100%{opacity:1;transform:scale(1)} }
+  .op-sub{ margin-top:22px; color:#cdddf5; letter-spacing:.5em; font-size:13px; opacity:0; animation:opSub .8s ease 1.1s forwards; }
+  .op-corp{ margin-top:6px; color:#fff; font-weight:700; letter-spacing:.2em; font-size:15px; opacity:0; animation:opSub .8s ease 1.3s forwards; }
+  @keyframes opSub{ to{opacity:1} }
+  /* A4見積書 */
+  .a4{ width:794px; min-height:1123px; background:#fff; padding:38px 40px; box-sizing:border-box; font-size:11pt; color:#111; }
+  .est-tbl{ width:100%; border-collapse:collapse; font-size:9.5pt; }
+  .est-tbl th,.est-tbl td{ border:1px solid #888; padding:4px 6px; }
+  .est-tbl th{ font-weight:700; }
+  .cat-row td{ background:#eef2fa; font-weight:800; color:var(--lcc-navy); }
+  .pill{ display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+  details.acc>summary{ list-style:none; cursor:pointer; }
+  details.acc>summary::-webkit-details-marker{ display:none; }
+  .badge-soon{ background:#fff2e6; color:#c2520a; border:1px solid #ffcaa0; }
   @media print{
-    @page{ size:A4; margin:0; }
-    body *{ visibility:hidden; }
-    #printArea,#printArea *{ visibility:visible; }
-    #printArea{ position:absolute; left:0; top:0; width:100%; }
+    body{ background:#fff; }
     .no-print{ display:none !important; }
-    .a4{ box-shadow:none; margin:0; width:100%; min-height:auto; }
+    .a4{ width:auto; min-height:auto; box-shadow:none; padding:0; }
+    .print-area{ display:block !important; }
+    @page{ size:A4; margin:12mm; }
   }
-  .num-tag{ display:inline-flex; align-items:center; justify-content:center;
-    min-width:34px; height:34px; }
+  .scrollbar-hide::-webkit-scrollbar{ display:none; }
 </style>
 </head>
 <body>
-<div id="app"></div>
+<div id="app" v-cloak>
 
-<script>
-const { createApp, reactive, computed, ref, onMounted, watch } = Vue;
-
-const STORAGE_KEY = 'lcc_estimate_v2';
-
-/* ===== 既定の単価マスタ（出雲市実勢に整合・全32項目）===== */
-const DEFAULT_RATES = {
-  // --- 仮設工事 ---
-  scaffold:        { label:'足場',                 unit:'㎡', price:900,    cat:'仮設' },
-  soundSheet:      { label:'防音・養生シート',     unit:'㎡', price:600,    cat:'仮設' },
-  machineTransport:{ label:'重機回送費',           unit:'式', price:60000,  cat:'仮設' },
-  // --- 解体本体（㎡） ---
-  woodDemolish:    { label:'木造解体（上屋）',     unit:'㎡', price:9000,   cat:'本体' },
-  steelDemolish:   { label:'S造解体（上屋）',      unit:'㎡', price:15000,  cat:'本体' },
-  foundation:      { label:'基礎撤去',             unit:'㎡', price:3500,   cat:'本体' },
-  laborDemo:       { label:'手壊し・上屋人工',     unit:'人日', price:25000, cat:'本体' },
-  // --- 外構・付帯 ---
-  blockWall:       { label:'ブロック塀撤去',       unit:'㎡', price:3500,   cat:'外構' },
-  doma:            { label:'土間コン撤去',         unit:'㎡', price:2500,   cat:'外構' },
-  treeRemoval:     { label:'樹木伐根',             unit:'本', price:8000,   cat:'外構' },
-  septicTank:      { label:'浄化槽・便槽撤去',     unit:'式', price:30000,  cat:'外構' },
-  // --- 廃棄物処分（㎥） ---
-  concreteDisp:    { label:'コンガラ処分',         unit:'㎥', price:5500,   cat:'処分' },
-  woodDisp:        { label:'木くず処分',           unit:'㎥', price:6000,   cat:'処分' },
-  gypsumDisp:      { label:'石膏ボード処分(管理型)', unit:'㎥', price:9000, cat:'処分' },
-  mixedDisp:       { label:'混合廃棄物・廃プラ処分', unit:'㎥', price:12000, cat:'処分' },
-  // --- 整地 ---
-  leveling:        { label:'整地・転圧',           unit:'㎡', price:700,    cat:'整地' },
-  // --- 調査・諸経費・特殊 ---
-  asbestosSurvey:  { label:'アスベスト事前調査費', unit:'式', price:50000,  cat:'諸経費' },
-  asbestosDisp:    { label:'石綿(レベル3)特殊処分', unit:'㎡', price:3000,  cat:'諸経費' },
-  recycleNotice:   { label:'マニフェスト・リサイクル法届出', unit:'式', price:15000, cat:'諸経費' },
-  guard:           { label:'警備員',               unit:'人日', price:18000, cat:'諸経費' },
-  // --- 片付け：体積・人件 ---
-  trashVolume:     { label:'一般ゴミ処分(立米単価)', unit:'㎥', price:8000, cat:'片付け' },
-  worker:          { label:'作業員',               unit:'人日', price:18000, cat:'片付け' },
-  stairFee:        { label:'階段降ろし割増(1階毎)', unit:'回', price:3000,  cat:'片付け' },
-  truck:           { label:'運搬車両費',           unit:'台', price:15000,  cat:'片付け' },
-  // --- 片付け：家電リサイクル・処理困難物（台/個） ---
-  refrigerator:    { label:'冷蔵庫リサイクル',     unit:'台', price:6500,   cat:'リサイクル' },
-  tv:              { label:'テレビリサイクル',     unit:'台', price:4000,   cat:'リサイクル' },
-  washer:          { label:'洗濯機リサイクル',     unit:'台', price:4500,   cat:'リサイクル' },
-  aircon:          { label:'エアコンリサイクル',   unit:'台', price:4000,   cat:'リサイクル' },
-  mattress:        { label:'マットレス(スプリング)', unit:'枚', price:3500, cat:'リサイクル' },
-  hardItem:        { label:'処理困難物(消火器・金庫等)', unit:'個', price:5000, cat:'リサイクル' },
-};
-
-const DEFAULT_OVERHEAD = 10; // 諸経費率(%)
-
-function deepClone(o){ return JSON.parse(JSON.stringify(o)); }
-
-function freshState(){
-  return {
-    company:{
-      name:'LCC株式会社',
-      address:'島根県出雲市知井宮町137番地2',
-      tel:'0853-27-9320',
-      person:'',
-    },
-    customer:{ name:'', project:'', site:'' },
-    rates: deepClone(DEFAULT_RATES),
-    overhead: DEFAULT_OVERHEAD,
-    // 解体入力
-    demo:{
-      area:30, floors:'1', structure:'wood',
-      roof:'tile', // tile(瓦・金属)/slate/asbestos
-      block:0, doma:0, trees:0, septic:false,
-      leveling:true,
-      difficulty:'standard', // standard / narrow / hand
-      guardDays:0,
-      asbestosSurvey:false,
-    },
-    // 片付け入力
-    clean:{
-      volume:6, condition:'standard', // standard/mixed/yashiki
-      stairFloors:0, workers:2, trucks:1,
-      refrigerator:0, tv:0, washer:0, aircon:0, mattress:0, hardItem:0,
-    },
-  };
-}
-
-const app = createApp({
-  setup(){
-    const tab = ref('demo'); // demo / clean / settings / preview
-    const showOpening = ref(true);
-    const state = reactive(freshState());
-    const toast = ref('');
-
-    /* ===== 保存・読込 ===== */
-    function save(){
-      try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
-    }
-    function load(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if(raw){
-          const d = JSON.parse(raw);
-          // ratesは新項目が増えてもデフォルトとマージ（既存の編集済み単価は保持）
-          const merged = deepClone(DEFAULT_RATES);
-          if(d.rates){ for(const k in d.rates){ if(merged[k] && typeof d.rates[k].price==='number') merged[k].price = d.rates[k].price; } }
-          Object.assign(state, d, { rates: merged });
-        }
-      }catch(e){}
-    }
-    function resetRates(){
-      if(confirm('単価を初期値に戻しますか？')){
-        state.rates = deepClone(DEFAULT_RATES);
-        state.overhead = DEFAULT_OVERHEAD;
-        showToast('単価を初期化しました');
-      }
-    }
-    function showToast(msg){ toast.value = msg; setTimeout(()=>toast.value='', 1800); }
-
-    onMounted(()=>{
-      load();
-      setTimeout(()=>{
-        const op = document.getElementById('opening');
-        if(op) op.classList.add('fade-out');
-        setTimeout(()=>{ showOpening.value=false; }, 1000);
-      }, 3400);
-    });
-    watch(state, ()=>save(), { deep:true });
-
-    const yen = n => '¥' + Math.round(n||0).toLocaleString('ja-JP');
-
-    /* ===== 係数 ===== */
-    const FOUNDATION_COEF = 0.20; // 基礎コンガラ ㎥/㎡
-    const WOOD_COEF       = 0.28; // 木くず ㎥/㎡
-    const SCAFFOLD_1F     = 1.5;  // 足場係数（平屋）
-    const SCAFFOLD_2F     = 2.2;  // 足場係数（2階建）
-
-    /* ===== 解体明細（業界標準の大項目順）=====
-       仮設工事 → 解体本体工事 → 外構・付帯 → 廃棄物運搬処分 → 整地 → 調査・諸経費 */
-    const demoItems = computed(()=>{
-      const d = state.demo, r = state.rates;
-      const area = Number(d.area)||0;
-      const items = [];
-      const push = (cat,label,qty,unit,price)=>{
-        qty = Math.round((Number(qty)||0)*100)/100;
-        if(qty>0 && price>0) items.push({cat,label,qty,unit,price,amount:qty*price});
-      };
-
-      // 混合ゴミ係数（構造で変化：木造0.05 / S造0.03）
-      const mixedCoef = d.structure==='steel' ? 0.03 : 0.05;
-      // 足場
-      const scafCoef = d.floors==='2' ? SCAFFOLD_2F : SCAFFOLD_1F;
-      const scafArea = area * scafCoef;
-      // 難易度係数（上屋作業費＝人工へ加算）
-      const diffCoef = d.difficulty==='hand' ? 1.8 : (d.difficulty==='narrow' ? 1.3 : 1.0);
-
-      /* --- ① 仮設工事 --- */
-      push('【仮設工事】', r.scaffold.label, scafArea, r.scaffold.unit, r.scaffold.price);
-      push('【仮設工事】', r.soundSheet.label, scafArea, r.soundSheet.unit, r.soundSheet.price);
-      push('【仮設工事】', r.machineTransport.label, 1, r.machineTransport.unit, r.machineTransport.price);
-
-      /* --- ② 解体本体工事 --- */
-      if(d.structure==='steel'){
-        push('【解体本体工事】', r.steelDemolish.label, area, r.steelDemolish.unit, r.steelDemolish.price);
-      }else{
-        push('【解体本体工事】', r.woodDemolish.label, area, r.woodDemolish.unit, r.woodDemolish.price);
-      }
-      push('【解体本体工事】', r.foundation.label, area, r.foundation.unit, r.foundation.price);
-      // 難易度割増（人工）：標準以外で発生
-      if(diffCoef>1.0){
-        const extraLabor = area * 0.06; // 延床に応じた手壊し人工目安
-        push('【解体本体工事】', r.laborDemo.label+'（難易度割増×'+diffCoef+'）',
-             extraLabor*diffCoef, r.laborDemo.unit, r.laborDemo.price);
-      }
-
-      /* --- ③ 外構・付帯工事 --- */
-      push('【外構・付帯工事】', r.blockWall.label, d.block, r.blockWall.unit, r.blockWall.price);
-      push('【外構・付帯工事】', r.doma.label, d.doma, r.doma.unit, r.doma.price);
-      push('【外構・付帯工事】', r.treeRemoval.label, d.trees, r.treeRemoval.unit, r.treeRemoval.price);
-      if(d.septic){
-        push('【外構・付帯工事】', r.septicTank.label, 1, r.septicTank.unit, r.septicTank.price);
-      }
-
-      /* --- ④ 廃棄物運搬処分費 --- */
-      push('【廃棄物運搬処分費】', r.concreteDisp.label, area*FOUNDATION_COEF, r.concreteDisp.unit, r.concreteDisp.price);
-      push('【廃棄物運搬処分費】', r.woodDisp.label, area*WOOD_COEF, r.woodDisp.unit, r.woodDisp.price);
-      push('【廃棄物運搬処分費】', r.mixedDisp.label, area*mixedCoef, r.mixedDisp.unit, r.mixedDisp.price);
-      // 屋根材：石綿スレートは特殊処分を屋根面積分で加算
-      if(d.roof==='asbestos'){
-        const roofArea = (d.floors==='2' ? area/2 : area) * 1.1; // 屋根投影面積目安
-        push('【廃棄物運搬処分費】', r.asbestosDisp.label, roofArea, r.asbestosDisp.unit, r.asbestosDisp.price);
-      }else if(d.roof==='slate'){
-        push('【廃棄物運搬処分費】', r.gypsumDisp.label+'（スレート系）', area*0.02, r.gypsumDisp.unit, r.gypsumDisp.price);
-      }
-
-      /* --- ⑤ 整地工事 --- */
-      if(d.leveling){
-        push('【整地工事】', r.leveling.label, area, r.leveling.unit, r.leveling.price);
-      }
-
-      /* --- ⑥ 調査・諸経費 --- */
-      // マニフェスト・建設リサイクル法届出（解体がある場合は常時計上）
-      if(area>0){
-        push('【調査・諸経費】', r.recycleNotice.label, 1, r.recycleNotice.unit, r.recycleNotice.price);
-      }
-      if(d.asbestosSurvey || d.roof==='asbestos'){
-        push('【調査・諸経費】', r.asbestosSurvey.label, 1, r.asbestosSurvey.unit, r.asbestosSurvey.price);
-      }
-      push('【調査・諸経費】', r.guard.label, d.guardDays, r.guard.unit, r.guard.price);
-
-      return items;
-    });
-
-    /* ===== 片付け明細 ===== */
-    const cleanItems = computed(()=>{
-      const c = state.clean, r = state.rates;
-      const items = [];
-      const push = (cat,label,qty,unit,price)=>{
-        qty = Math.round((Number(qty)||0)*100)/100;
-        if(qty>0 && price>0) items.push({cat,label,qty,unit,price,amount:qty*price});
-      };
-
-      // 状態割増
-      const condCoef = c.condition==='yashiki' ? 2.0 : (c.condition==='mixed' ? 1.5 : 1.0);
-      const condLabel = c.condition==='yashiki' ? '屋敷' : (c.condition==='mixed' ? '混載' : '標準');
-
-      /* --- 廃棄物処分（体積） --- */
-      const vol = Number(c.volume)||0;
-      if(vol>0){
-        items.push({
-          cat:'【廃棄物運搬処分費】',
-          label:'一般ゴミ処分（状態:'+condLabel+'×'+condCoef+'）',
-          qty:vol, unit:'㎥', price:r.trashVolume.price*condCoef,
-          amount:vol*r.trashVolume.price*condCoef
-        });
-      }
-
-      /* --- 人件・運搬 --- */
-      push('【作業・運搬】', r.worker.label, c.workers, r.worker.unit, r.worker.price);
-      const stairQty = (Number(c.stairFloors)||0) * (Number(c.workers)||0);
-      push('【作業・運搬】', r.stairFee.label, stairQty, r.stairFee.unit, r.stairFee.price);
-      push('【作業・運搬】', r.truck.label, c.trucks, r.truck.unit, r.truck.price);
-
-      /* --- 家電リサイクル・処理困難物 --- */
-      push('【リサイクル・困難物】', r.refrigerator.label, c.refrigerator, r.refrigerator.unit, r.refrigerator.price);
-      push('【リサイクル・困難物】', r.tv.label, c.tv, r.tv.unit, r.tv.price);
-      push('【リサイクル・困難物】', r.washer.label, c.washer, r.washer.unit, r.washer.price);
-      push('【リサイクル・困難物】', r.aircon.label, c.aircon, r.aircon.unit, r.aircon.price);
-      push('【リサイクル・困難物】', r.mattress.label, c.mattress, r.mattress.unit, r.mattress.price);
-      push('【リサイクル・困難物】', r.hardItem.label, c.hardItem, r.hardItem.unit, r.hardItem.price);
-
-      return items;
-    });
-
-    /* ===== 統合明細・合計 ===== */
-    const allItems = computed(()=>[...demoItems.value, ...cleanItems.value]);
-
-    // 見積書での大項目表示順（業界標準）
-    const CAT_ORDER = ['【仮設工事】','【解体本体工事】','【外構・付帯工事】','【廃棄物運搬処分費】','【整地工事】','【調査・諸経費】','【作業・運搬】','【リサイクル・困難物】'];
-    const groupedItems = computed(()=>{
-      const g = {};
-      for(const it of allItems.value){
-        if(!g[it.cat]) g[it.cat]=[];
-        g[it.cat].push(it);
-      }
-      const order = CAT_ORDER.filter(c=>g[c]);
-      for(const c in g){ if(!order.includes(c)) order.push(c); }
-      return order.map(cat=>({ cat, items:g[cat], sub:g[cat].reduce((s,i)=>s+i.amount,0) }));
-    });
-
-    const directTotal = computed(()=> allItems.value.reduce((s,i)=>s+i.amount,0));
-    const overheadAmount = computed(()=> Math.round(directTotal.value * (Number(state.overhead)||0)/100));
-    const subtotal = computed(()=> directTotal.value + overheadAmount.value);
-    const tax = computed(()=> Math.round(subtotal.value * 0.10));
-    const total = computed(()=> subtotal.value + tax.value);
-
-    const demoTotal = computed(()=> demoItems.value.reduce((s,i)=>s+i.amount,0));
-    const cleanTotal = computed(()=> cleanItems.value.reduce((s,i)=>s+i.amount,0));
-
-    const today = new Date();
-    const dateStr = `${today.getFullYear()}年${today.getMonth()+1}月${today.getDate()}日`;
-    const validUntil = (()=>{ const d=new Date(); d.setDate(d.getDate()+30);
-      return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; })();
-
-    function doPrint(){ window.print(); }
-
-    return {
-      tab, showOpening, state, toast,
-      yen, demoItems, cleanItems, allItems, groupedItems,
-      directTotal, overheadAmount, subtotal, tax, total,
-      demoTotal, cleanTotal, dateStr, validUntil,
-      resetRates, doPrint, showToast,
-    };
-  },
-  template: `
-  <!-- ===== オープニング（ブルー基調＋オレンジ枠） ===== -->
-  <div id="opening" v-if="showOpening">
-    <div class="op-frame">
-      <div class="op-logo">L<span>C</span>C</div>
+  <!-- ===== オープニング ===== -->
+  <div id="opening" :class="{hide:opHide}" v-if="showOpening" @click="skipOpening">
+    <div class="op-logo">
+      <div class="op-sweep"></div>
+      <span>L<em>C</em>C</span>
     </div>
-    <div class="op-sub">LCC株式会社</div>
-    <div class="op-line"></div>
-    <div class="op-sub2">SHIMANE&nbsp;&nbsp;IZUMO</div>
+    <div class="op-corp">LCC株式会社</div>
+    <div class="op-sub">SHIMANE&nbsp;&nbsp;IZUMO</div>
   </div>
 
-  <!-- ===== 本体 ===== -->
-  <div class="safe-bottom min-h-screen">
+  <div class="safe-bottom min-h-screen" v-show="!showOpening || opHide">
     <!-- ヘッダー -->
-    <header class="sticky top-0 z-30 text-white px-4 py-3 flex items-center justify-between shadow-lg" style="background:linear-gradient(135deg,var(--lcc-navy) 0%,var(--lcc-navy-deep) 100%); padding-top:calc(env(safe-area-inset-top) + 10px)">
-      <div class="flex items-center gap-2">
-        <span class="font-black text-xl tracking-widest px-2 py-0.5 rounded-md" style="border:2px solid var(--lcc-orange)">L<span style="color:var(--lcc-orange)">C</span>C</span>
-        <span class="text-xs text-blue-100 leading-tight">LCC株式会社<br><span class="text-blue-200">解体・片付け見積</span></span>
+    <header class="sticky top-0 z-30 text-white px-3 py-2.5 shadow-lg" style="background:linear-gradient(135deg,var(--lcc-navy) 0%,var(--lcc-navy-deep) 100%); padding-top:calc(env(safe-area-inset-top) + 8px)">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="font-black text-lg tracking-wider px-2 py-0.5 rounded-md" style="border:2px solid var(--lcc-orange)">L<span style="color:var(--lcc-orange)">C</span>C</span>
+          <div class="leading-tight">
+            <div class="text-[13px] font-bold">LCC株式会社</div>
+            <div class="text-[10px] text-blue-200">統合見積システム</div>
+          </div>
+        </div>
+        <div class="text-right leading-tight">
+          <div class="text-[10px] text-blue-200 truncate max-w-[140px]">{{ activeProject ? activeProject.name : '案件未選択' }}</div>
+          <div class="text-base font-bold" style="color:var(--lcc-orange)">{{ yen(grand.total) }}</div>
+        </div>
       </div>
-      <div class="text-right">
-        <div class="text-[10px] text-blue-200">税込合計</div>
-        <div class="text-lg font-bold" style="color:var(--lcc-orange)">{{ yen(total) }}</div>
+      <!-- 社内向け原価粗利バー -->
+      <div v-if="activeEstimate" class="mt-1.5 flex items-center gap-2 text-[10px] bg-white/10 rounded-lg px-2 py-1">
+        <span>売上 <b>{{ yen(grand.sell) }}</b></span>
+        <span class="text-blue-200">原価 {{ yen(grand.cost) }}</span>
+        <span style="color:var(--lcc-orange-soft)">粗利 <b>{{ yen(grand.profit) }}</b></span>
+        <span class="ml-auto px-1.5 rounded" :style="grand.marginRate>=0.25?'background:#1f8f4e':'background:#b4451f'">{{ (grand.marginRate*100).toFixed(1) }}%</span>
       </div>
     </header>
 
-    <main class="px-3 pt-3 max-w-2xl mx-auto">
+    <main class="max-w-2xl mx-auto px-3 pt-3">
 
-    <!-- ============ 解体タブ ============ -->
-    <section v-show="tab==='demo'">
-      <div class="card p-4 mb-3">
-        <h2 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><span class="w-1.5 h-5 rounded" style="background:var(--lcc-orange)"></span>解体工事の積算</h2>
-
-        <label class="block text-sm font-semibold text-gray-600 mb-1">延床面積（㎡）</label>
-        <input type="number" v-model.number="state.demo.area" inputmode="decimal" class="w-full border border-gray-300 rounded-xl px-3 py-3 mb-3" placeholder="例：30">
-
-        <label class="block text-sm font-semibold text-gray-600 mb-1">階数</label>
-        <div class="grid grid-cols-2 gap-2 mb-3">
-          <button class="seg-btn rounded-xl py-3 font-semibold border" :class="state.demo.floors==='1'?'text-white border-transparent':'bg-gray-50 text-gray-600 border-gray-300'" :style="state.demo.floors==='1'?'background:var(--lcc-navy)':''" @click="state.demo.floors='1'">平屋</button>
-          <button class="seg-btn rounded-xl py-3 font-semibold border" :class="state.demo.floors==='2'?'text-white border-transparent':'bg-gray-50 text-gray-600 border-gray-300'" :style="state.demo.floors==='2'?'background:var(--lcc-navy)':''" @click="state.demo.floors='2'">2階建</button>
-        </div>
-
-        <label class="block text-sm font-semibold text-gray-600 mb-1">構造</label>
-        <div class="grid grid-cols-2 gap-2 mb-3">
-          <button class="seg-btn rounded-xl py-3 font-semibold border" :class="state.demo.structure==='wood'?'text-white border-transparent':'bg-gray-50 text-gray-600 border-gray-300'" :style="state.demo.structure==='wood'?'background:var(--lcc-navy)':''" @click="state.demo.structure='wood'">木造</button>
-          <button class="seg-btn rounded-xl py-3 font-semibold border" :class="state.demo.structure==='steel'?'text-white border-transparent':'bg-gray-50 text-gray-600 border-gray-300'" :style="state.demo.structure==='steel'?'background:var(--lcc-navy)':''" @click="state.demo.structure='steel'">S造（鉄骨）</button>
-        </div>
-
-        <label class="block text-sm font-semibold text-gray-600 mb-1">屋根材</label>
-        <div class="grid grid-cols-3 gap-2 mb-3">
-          <button class="seg-btn rounded-xl py-3 text-sm font-semibold border" :class="state.demo.roof==='tile'?'text-white border-transparent':'bg-gray-50 text-gray-600 border-gray-300'" :style="state.demo.roof==='tile'?'background:var(--lcc-navy)':''" @click="state.demo.roof='tile'">瓦・金属</button>
-          <button class="seg-btn rounded-xl py-3 text-sm font-semibold border" :class="state.demo.roof==='slate'?'text-white border-transparent':'bg-gray-50 text-gray-600 border-gray-300'" :style="state.demo.roof==='slate'?'background:var(--lcc-navy)':''" @click="state.demo.roof='slate'">スレート</button>
-          <button class="seg-btn rounded-xl py-3 text-xs font-semibold border leading-tight" :class="state.demo.roof==='asbestos'?'text-white border-transparent':'bg-gray-50 text-gray-600 border-gray-300'" :style="state.demo.roof==='asbestos'?'background:var(--lcc-navy)':''" @click="state.demo.roof='asbestos'">石綿<br>スレート</button>
-        </div>
-
-        <label class="block text-sm font-semibold text-gray-600 mb-1">難易度（環境割増）</label>
-        <div class="grid grid-cols-3 gap-2 mb-1">
-          <button class="seg-btn rounded-xl py-3 text-sm font-semibold border" :class="state.demo.difficulty==='standard'?'text-white border-transparent':'bg-gray-50 text-gray-600 border-gray-300'" :style="state.demo.difficulty==='standard'?'background:var(--lcc-navy)':''" @click="state.demo.difficulty='standard'">標準</button>
-          <button class="seg-btn rounded-xl py-3 text-sm font-semibold border" :class="state.demo.difficulty==='narrow'?'text-white border-transparent':'bg-gray-50 text-gray-600 border-gray-300'" :style="state.demo.difficulty==='narrow'?'background:var(--lcc-navy)':''" @click="state.demo.difficulty='narrow'">やや狭小</button>
-          <button class="seg-btn rounded-xl py-3 text-sm font-semibold border" :class="state.demo.difficulty==='hand'?'text-white border-transparent':'bg-gray-50 text-gray-600 border-gray-300'" :style="state.demo.difficulty==='hand'?'background:var(--lcc-navy)':''" @click="state.demo.difficulty='hand'">手壊し</button>
-        </div>
-        <p class="text-[11px] text-gray-400 mb-3">狭小=人工×1.3 / 手壊し=人工×1.8</p>
-
-        <label class="flex items-center gap-3 bg-blue-50 rounded-xl px-3 py-3">
-          <input type="checkbox" v-model="state.demo.leveling" class="w-5 h-5">
-          <span class="text-sm font-semibold text-gray-700">解体後に整地・転圧を行う</span>
-        </label>
+    <!-- ============ 案件 / CRM / パイプライン ============ -->
+    <section v-show="tab==='projects'">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="font-bold text-gray-800 flex items-center gap-2"><span class="w-1.5 h-5 rounded" style="background:var(--lcc-orange)"></span>案件・顧客管理</h2>
+        <button class="text-white text-sm font-bold rounded-xl px-3 py-2" style="background:var(--lcc-navy)" @click="newProject">＋ 新規案件</button>
       </div>
 
-      <div class="card p-4 mb-3">
-        <h3 class="font-bold text-gray-700 mb-3">外構・付帯</h3>
-        <div class="grid grid-cols-3 gap-2 mb-3">
-          <div><label class="block text-xs text-gray-500 mb-1">ブロック塀(㎡)</label><input type="number" v-model.number="state.demo.block" inputmode="decimal" class="w-full border border-gray-300 rounded-xl px-2 py-3"></div>
-          <div><label class="block text-xs text-gray-500 mb-1">土間コン(㎡)</label><input type="number" v-model.number="state.demo.doma" inputmode="decimal" class="w-full border border-gray-300 rounded-xl px-2 py-3"></div>
-          <div><label class="block text-xs text-gray-500 mb-1">樹木伐根(本)</label><input type="number" v-model.number="state.demo.trees" inputmode="numeric" class="w-full border border-gray-300 rounded-xl px-2 py-3"></div>
-        </div>
-        <label class="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-3">
-          <input type="checkbox" v-model="state.demo.septic" class="w-5 h-5">
-          <span class="text-sm font-semibold text-gray-700">浄化槽・便槽の撤去あり</span>
-        </label>
+      <!-- パイプライン進捗フィルタ -->
+      <div class="flex gap-1.5 overflow-x-auto scrollbar-hide pb-2 mb-1">
+        <button v-for="s in pipelineStages" :key="s.key" @click="pipeFilter = pipeFilter===s.key?'':s.key"
+          class="shrink-0 rounded-full px-3 py-1.5 text-xs font-bold border" :class="pipeFilter===s.key?'text-white border-transparent':'bg-white text-gray-600 border-gray-300'" :style="pipeFilter===s.key?('background:'+s.color):''">
+          {{ s.label }}（{{ projects.filter(p=>p.status===s.key).length }}）
+        </button>
       </div>
 
-      <div class="card p-4 mb-3">
-        <h3 class="font-bold text-gray-700 mb-3">安全・調査</h3>
-        <label class="block text-xs text-gray-500 mb-1">警備員（人日）</label>
-        <input type="number" v-model.number="state.demo.guardDays" inputmode="numeric" class="w-full border border-gray-300 rounded-xl px-3 py-3 mb-3">
-        <label class="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-3">
-          <input type="checkbox" v-model="state.demo.asbestosSurvey" class="w-5 h-5">
-          <span class="text-sm font-semibold text-gray-700">石綿事前調査を実施（調査費を計上）</span>
-        </label>
-        <p class="text-[11px] text-gray-400 mt-2">※マニフェスト・建設リサイクル法届出費は解体時に自動計上されます。</p>
-      </div>
+      <div v-if="filteredProjects.length===0" class="card p-6 text-center text-gray-400 text-sm">案件がありません。「＋新規案件」から登録してください。</div>
 
-      <div class="card p-4 mb-3 border-l-4" style="border-color:var(--lcc-orange)">
-        <div class="flex justify-between items-center">
-          <span class="font-bold text-gray-700">解体 小計（直接工事費）</span>
-          <span class="text-lg font-bold" style="color:var(--lcc-navy)">{{ yen(demoTotal) }}</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ 片付けタブ ============ -->
-    <section v-show="tab==='clean'">
-      <div class="card p-4 mb-3">
-        <h2 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><span class="w-1.5 h-5 rounded" style="background:var(--lcc-orange)"></span>一般廃棄物・片付けの積算</h2>
-
-        <label class="block text-sm font-semibold text-gray-600 mb-1">総体積（㎥）</label>
-        <input type="number" v-model.number="state.clean.volume" inputmode="decimal" class="w-full border border-gray-300 rounded-xl px-3 py-3 mb-1" placeholder="例：6">
-        <p class="text-[11px] text-gray-400 mb-3">目安：押入れ1間 ≒ 3㎥</p>
-
-        <label class="block text-sm font-semibold text-gray-600 mb-1">ゴミの状態</label>
-        <div class="grid grid-cols-3 gap-2 mb-3">
-          <button class="seg-btn rounded-xl py-3 text-sm font-semibold border" :class="state.clean.condition==='standard'?'text-white border-transparent':'bg-gray-50 text-gray-600 border-gray-300'" :style="state.clean.condition==='standard'?'background:var(--lcc-navy)':''" @click="state.clean.condition='standard'">標準<br><span class="text-[10px] opacity-80">×1.0</span></button>
-          <button class="seg-btn rounded-xl py-3 text-sm font-semibold border" :class="state.clean.condition==='mixed'?'text-white border-transparent':'bg-gray-50 text-gray-600 border-gray-300'" :style="state.clean.condition==='mixed'?'background:var(--lcc-navy)':''" @click="state.clean.condition='mixed'">混載<br><span class="text-[10px] opacity-80">×1.5</span></button>
-          <button class="seg-btn rounded-xl py-3 text-sm font-semibold border" :class="state.clean.condition==='yashiki'?'text-white border-transparent':'bg-gray-50 text-gray-600 border-gray-300'" :style="state.clean.condition==='yashiki'?'background:var(--lcc-navy)':''" @click="state.clean.condition='yashiki'">屋敷<br><span class="text-[10px] opacity-80">×2.0</span></button>
-        </div>
-
-        <div class="grid grid-cols-3 gap-2">
-          <div><label class="block text-xs text-gray-500 mb-1">作業員(人)</label><input type="number" v-model.number="state.clean.workers" inputmode="numeric" class="w-full border border-gray-300 rounded-xl px-2 py-3"></div>
-          <div><label class="block text-xs text-gray-500 mb-1">階段(階数)</label><input type="number" v-model.number="state.clean.stairFloors" inputmode="numeric" class="w-full border border-gray-300 rounded-xl px-2 py-3"></div>
-          <div><label class="block text-xs text-gray-500 mb-1">運搬車(台)</label><input type="number" v-model.number="state.clean.trucks" inputmode="numeric" class="w-full border border-gray-300 rounded-xl px-2 py-3"></div>
-        </div>
-      </div>
-
-      <div class="card p-4 mb-3">
-        <h3 class="font-bold text-gray-700 mb-3">家電リサイクル・処理困難物（台/個）</h3>
-        <div class="space-y-2">
-          <div v-for="k in ['refrigerator','tv','washer','aircon','mattress','hardItem']" :key="k" class="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
-            <span class="text-sm font-semibold text-gray-700">{{ state.rates[k].label }}</span>
+      <div v-for="p in filteredProjects" :key="p.id" class="card p-3 mb-2" :class="activeProjectId===p.id?'ring-2':''" :style="activeProjectId===p.id?'--tw-ring-color:var(--lcc-orange)':''">
+        <div class="flex items-start justify-between" @click="selectProject(p.id)">
+          <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
-              <button class="num-tag rounded-full bg-gray-200 text-xl font-bold text-gray-700" @click="state.clean[k]=Math.max(0,(state.clean[k]||0)-1)">−</button>
-              <input type="number" v-model.number="state.clean[k]" inputmode="numeric" class="w-12 text-center border border-gray-300 rounded-lg py-2">
-              <button class="num-tag rounded-full text-xl font-bold text-white" style="background:var(--lcc-navy)" @click="state.clean[k]=(state.clean[k]||0)+1">＋</button>
+              <span class="pill text-white" :style="'background:'+stageColor(p.status)">{{ stageLabel(p.status) }}</span>
+              <span class="font-bold text-gray-800 truncate">{{ p.name || '無題案件' }}</span>
             </div>
+            <div class="text-xs text-gray-500 mt-1 truncate">{{ customerName(p.customerId) || '顧客未設定' }}　{{ p.site }}</div>
+            <div class="text-xs text-gray-400 mt-0.5">見積 {{ p.estimates.length }}件 / 写真 {{ p.photos.length }}枚 / 更新 {{ fmtDate(p.updatedAt) }}</div>
+          </div>
+          <div class="text-right ml-2">
+            <div class="font-bold text-sm" style="color:var(--lcc-navy)">{{ yen(projectTotal(p)) }}</div>
           </div>
         </div>
-      </div>
-
-      <div class="card p-4 mb-3 border-l-4" style="border-color:var(--lcc-orange)">
-        <div class="flex justify-between items-center">
-          <span class="font-bold text-gray-700">片付け 小計（直接工事費）</span>
-          <span class="text-lg font-bold" style="color:var(--lcc-navy)">{{ yen(cleanTotal) }}</span>
+        <div class="flex gap-1.5 mt-2 pt-2 border-t border-gray-100">
+          <select :value="p.status" @change="e=>{p.status=e.target.value; touch(p)}" class="text-xs border border-gray-300 rounded-lg px-2 py-1.5 bg-white">
+            <option v-for="s in pipelineStages" :key="s.key" :value="s.key">{{ s.label }}</option>
+          </select>
+          <button class="text-xs border border-gray-300 rounded-lg px-2 py-1.5" @click="selectProject(p.id); tab='estimate'">積算</button>
+          <button class="text-xs border border-gray-300 rounded-lg px-2 py-1.5" @click="openMap(p)">地図</button>
+          <button class="text-xs border border-red-200 text-red-500 rounded-lg px-2 py-1.5 ml-auto" @click="delProject(p.id)">削除</button>
         </div>
       </div>
-    </section>
 
-    <!-- ============ 設定タブ ============ -->
-    <section v-show="tab==='settings'">
-      <div class="card p-4 mb-3">
-        <h2 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><span class="w-1.5 h-5 rounded" style="background:var(--lcc-orange)"></span>顧客情報</h2>
-        <label class="block text-xs text-gray-500 mb-1">宛名</label>
-        <div class="flex items-center mb-3">
-          <input type="text" v-model="state.customer.name" class="flex-1 border border-gray-300 rounded-xl px-3 py-3" placeholder="例：山田太郎">
-          <span class="ml-2 text-gray-500 font-semibold">様</span>
+      <!-- 案件編集 -->
+      <div v-if="activeProject" class="card p-4 mt-3">
+        <h3 class="font-bold text-gray-700 mb-3">案件情報の編集</h3>
+        <label class="block text-xs text-gray-500 mb-1">案件名</label>
+        <input v-model="activeProject.name" @input="touch(activeProject)" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 mb-3" placeholder="例：山田様邸 解体工事">
+        <label class="block text-xs text-gray-500 mb-1">顧客</label>
+        <div class="flex gap-2 mb-3">
+          <select v-model="activeProject.customerId" @change="touch(activeProject)" class="flex-1 border border-gray-300 rounded-xl px-3 py-2.5 bg-white">
+            <option value="">未設定</option>
+            <option v-for="c in customers" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
+          <button class="text-white rounded-xl px-3" style="background:var(--lcc-navy)" @click="newCustomer">＋顧客</button>
         </div>
-        <label class="block text-xs text-gray-500 mb-1">工事名称</label>
-        <input type="text" v-model="state.customer.project" class="w-full border border-gray-300 rounded-xl px-3 py-3 mb-3" placeholder="例：木造2階建 解体工事">
         <label class="block text-xs text-gray-500 mb-1">現場住所</label>
-        <input type="text" v-model="state.customer.site" class="w-full border border-gray-300 rounded-xl px-3 py-3" placeholder="例：島根県出雲市〇〇町">
+        <input v-model="activeProject.site" @input="touch(activeProject)" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 mb-1" placeholder="例：島根県出雲市知井宮町">
+        <p class="text-[11px] text-gray-400 mb-2">「地図」ボタンでGoogle Mapsを開きます（住所検索）。</p>
       </div>
 
-      <div class="card p-4 mb-3">
-        <h2 class="font-bold text-gray-800 mb-3 flex items-center gap-2"><span class="w-1.5 h-5 rounded" style="background:var(--lcc-orange)"></span>自社情報</h2>
-        <label class="block text-xs text-gray-500 mb-1">会社名</label>
-        <input type="text" v-model="state.company.name" class="w-full border border-gray-300 rounded-xl px-3 py-3 mb-3">
-        <label class="block text-xs text-gray-500 mb-1">住所</label>
-        <input type="text" v-model="state.company.address" class="w-full border border-gray-300 rounded-xl px-3 py-3 mb-3">
-        <div class="grid grid-cols-2 gap-2">
-          <div><label class="block text-xs text-gray-500 mb-1">電話番号</label><input type="text" v-model="state.company.tel" inputmode="tel" class="w-full border border-gray-300 rounded-xl px-3 py-3"></div>
-          <div><label class="block text-xs text-gray-500 mb-1">担当者名</label><input type="text" v-model="state.company.person" class="w-full border border-gray-300 rounded-xl px-3 py-3"></div>
-        </div>
-      </div>
-
-      <div class="card p-4 mb-3">
+      <!-- 顧客一覧 -->
+      <div class="card p-4 mt-3">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="font-bold text-gray-800 flex items-center gap-2"><span class="w-1.5 h-5 rounded" style="background:var(--lcc-orange)"></span>単価マスタ設定</h2>
-          <button class="text-xs text-gray-500 border border-gray-300 rounded-lg px-2 py-1" @click="resetRates">初期化</button>
+          <h3 class="font-bold text-gray-700">顧客台帳（{{ customers.length }}）</h3>
+          <button class="text-sm text-white rounded-lg px-3 py-1.5" style="background:var(--lcc-navy)" @click="newCustomer">＋顧客追加</button>
         </div>
-        <label class="block text-xs text-gray-500 mb-1">諸経費率（％）</label>
-        <input type="number" v-model.number="state.overhead" inputmode="decimal" class="w-full border border-gray-300 rounded-xl px-3 py-3 mb-4">
-        <div class="space-y-2">
-          <div v-for="(r,k) in state.rates" :key="k" class="flex items-center justify-between gap-2 border-b border-gray-100 pb-2">
-            <div class="flex-1">
-              <div class="text-sm font-semibold text-gray-700 leading-tight">{{ r.label }}</div>
-              <div class="text-[10px] text-gray-400">{{ r.cat }} / 単位:{{ r.unit }}</div>
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-gray-400 text-sm">¥</span>
-              <input type="number" v-model.number="r.price" inputmode="numeric" class="w-24 text-right border border-gray-300 rounded-lg px-2 py-2">
-            </div>
+        <div v-for="c in customers" :key="c.id" class="border-b border-gray-100 py-2">
+          <div class="grid grid-cols-2 gap-2">
+            <input v-model="c.name" @input="save" class="border border-gray-300 rounded-lg px-2 py-2 text-sm" placeholder="氏名/法人名">
+            <input v-model="c.tel" @input="save" inputmode="tel" class="border border-gray-300 rounded-lg px-2 py-2 text-sm" placeholder="電話">
           </div>
+          <input v-model="c.address" @input="save" class="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm mt-1.5" placeholder="住所">
+          <button class="text-xs text-red-500 mt-1" @click="delCustomer(c.id)">この顧客を削除</button>
         </div>
-        <p class="text-[11px] text-gray-400 mt-3">変更内容はこの端末に自動保存されます（LocalStorage）。単価は島根県出雲市の実勢相場（2025年）に基づく初期値です。</p>
       </div>
     </section>
 
-    <!-- ============ プレビュータブ ============ -->
-    <section v-show="tab==='preview'">
-      <div class="flex gap-2 mb-3 no-print">
-        <button class="flex-1 text-white font-bold rounded-xl py-3 shadow" style="background:var(--lcc-navy)" @click="doPrint">印刷 / PDF出力</button>
+    <!-- ============ 積算（階層ツリー内訳） ============ -->
+    <section v-show="tab==='estimate'">
+      <div v-if="!activeEstimate" class="card p-6 text-center text-gray-400 text-sm">
+        案件を選択し、「パターン」タブで見積（松/竹/梅）を作成してください。
+        <button class="block mx-auto mt-3 text-white rounded-xl px-4 py-2" style="background:var(--lcc-navy)" @click="tab='patterns'">パターン作成へ</button>
       </div>
-      <p class="text-[11px] text-gray-500 mb-2 no-print">下のプレビューは横スクロールで全体を確認できます。「印刷/PDF」からPDF保存・LINE送信が可能です。</p>
 
-      <div class="overflow-auto bg-gray-300 p-2 rounded-xl no-print-bg" style="-webkit-overflow-scrolling:touch">
-        <div id="printArea">
-          <div class="a4 shadow-lg" style="transform-origin:top left">
-            <!-- 見出し -->
-            <div style="text-align:center; margin-bottom:10px">
-              <div style="font-size:22pt; font-weight:900; letter-spacing:.4em; border-bottom:3px double var(--lcc-navy); display:inline-block; padding:0 20px 4px; color:var(--lcc-navy)">御　見　積　書</div>
-            </div>
-            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px">
-              <div style="width:55%">
-                <div style="font-size:15pt; font-weight:700; border-bottom:1.5px solid #333; padding-bottom:4px">
-                  {{ state.customer.name || '　　　　　　' }} 様
-                </div>
-                <div style="margin-top:8px; font-size:10pt; line-height:1.6">
-                  <div v-if="state.customer.project">工事名称：{{ state.customer.project }}</div>
-                  <div v-if="state.customer.site">現場住所：{{ state.customer.site }}</div>
-                </div>
-                <div style="margin-top:14px; font-size:10pt">下記の通りお見積もり申し上げます。</div>
-                <div style="margin-top:10px; border:2px solid var(--lcc-orange); padding:8px; text-align:center; border-radius:4px">
-                  <span style="font-size:11pt">御見積金額（税込）</span>
-                  <span style="font-size:18pt; font-weight:900; color:var(--lcc-navy); margin-left:10px">{{ yen(total) }}</span>
-                </div>
-              </div>
-              <div style="width:42%; font-size:9.5pt; line-height:1.7; text-align:right">
-                <div>見積日：{{ dateStr }}</div>
-                <div>有効期限：{{ validUntil }}</div>
-                <div style="margin-top:8px; display:inline-block; border:2px solid var(--lcc-orange); border-radius:5px; padding:6px 10px; text-align:right">
-                  <div style="font-size:13pt; font-weight:800; color:var(--lcc-navy)">{{ state.company.name }}</div>
-                  <div>{{ state.company.address }}</div>
-                  <div>TEL：{{ state.company.tel }}</div>
-                  <div v-if="state.company.person">担当：{{ state.company.person }}</div>
-                </div>
+      <template v-else>
+        <!-- クイック積算（解体ウィザード） -->
+        <div class="card mb-2 overflow-hidden">
+          <button class="w-full px-4 py-3 font-bold text-gray-700 flex items-center justify-between" style="background:#f3f6fc" @click="quickOpen=!quickOpen">
+            <span>⚡ 解体クイック積算（自動で項目生成）</span><span class="text-xs text-gray-400">{{ quickOpen?'閉じる':'タップで開く' }}</span>
+          </button>
+          <div v-show="quickOpen" class="p-4 border-t border-gray-100">
+            <div class="grid grid-cols-2 gap-2 mb-2">
+              <div><label class="text-xs text-gray-500">延床面積(㎡)</label><input type="number" v-model.number="quick.area" inputmode="decimal" class="w-full border border-gray-300 rounded-xl px-3 py-2.5"></div>
+              <div><label class="text-xs text-gray-500">階数</label>
+                <select v-model.number="quick.floors" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 bg-white"><option :value="1">平屋</option><option :value="2">2階建</option><option :value="3">3階建</option></select>
               </div>
             </div>
-
-            <!-- 明細表 -->
-            <table class="est-tbl">
-              <thead>
-                <tr style="background:var(--lcc-navy); color:#fff">
-                  <th style="width:48%; text-align:left">摘要</th>
-                  <th style="width:14%">数量</th>
-                  <th style="width:8%">単位</th>
-                  <th style="width:15%">単価</th>
-                  <th style="width:15%">金額</th>
-                </tr>
-              </thead>
-              <tbody>
-                <template v-for="g in groupedItems" :key="g.cat">
-                  <tr class="cat-row"><td colspan="5">{{ g.cat }}</td></tr>
-                  <tr v-for="(it,idx) in g.items" :key="idx">
-                    <td style="text-align:left">{{ it.label }}</td>
-                    <td style="text-align:right">{{ it.qty.toLocaleString('ja-JP') }}</td>
-                    <td style="text-align:center">{{ it.unit }}</td>
-                    <td style="text-align:right">{{ yen(it.price) }}</td>
-                    <td style="text-align:right">{{ yen(it.amount) }}</td>
-                  </tr>
-                  <tr><td colspan="4" style="text-align:right; font-size:9.5pt; color:#555">{{ g.cat }} 小計</td><td style="text-align:right; font-weight:700">{{ yen(g.sub) }}</td></tr>
-                </template>
-                <tr v-if="allItems.length===0"><td colspan="5" style="text-align:center; color:#999; padding:20px">入力された項目がありません</td></tr>
-              </tbody>
-            </table>
-
-            <!-- 合計欄 -->
-            <div style="display:flex; justify-content:flex-end; margin-top:10px">
-              <table style="width:55%; font-size:10.5pt">
-                <tr><td style="border:1px solid #444; padding:5px 8px">直接工事費</td><td style="border:1px solid #444; padding:5px 8px; text-align:right">{{ yen(directTotal) }}</td></tr>
-                <tr><td style="border:1px solid #444; padding:5px 8px">諸経費（{{ state.overhead }}%）</td><td style="border:1px solid #444; padding:5px 8px; text-align:right">{{ yen(overheadAmount) }}</td></tr>
-                <tr><td style="border:1px solid #444; padding:5px 8px; font-weight:700; background:#eef2fa">小計</td><td style="border:1px solid #444; padding:5px 8px; text-align:right; font-weight:700; background:#eef2fa">{{ yen(subtotal) }}</td></tr>
-                <tr><td style="border:1px solid #444; padding:5px 8px">消費税（10%）</td><td style="border:1px solid #444; padding:5px 8px; text-align:right">{{ yen(tax) }}</td></tr>
-                <tr><td style="border:2px solid var(--lcc-orange); padding:7px 8px; font-weight:800; background:#fff6ec">合計（税込）</td><td style="border:2px solid var(--lcc-orange); padding:7px 8px; text-align:right; font-weight:900; color:var(--lcc-navy); font-size:13pt; background:#fff6ec">{{ yen(total) }}</td></tr>
-              </table>
+            <label class="text-xs text-gray-500">構造</label>
+            <div class="grid grid-cols-4 gap-1.5 mb-2">
+              <button v-for="s in ['木造','S造','RC造','内装']" :key="s" class="seg-btn rounded-lg py-2 text-sm border" :class="quick.struct===s?'text-white border-transparent':'bg-gray-50 text-gray-600 border-gray-300'" :style="quick.struct===s?'background:var(--lcc-navy)':''" @click="quick.struct=s">{{ s }}</button>
             </div>
+            <label class="flex items-center gap-2 text-sm py-1.5"><input type="checkbox" v-model="quick.asbestos" class="w-5 h-5"> 石綿スレート屋根（レベル3処分）</label>
+            <label class="flex items-center gap-2 text-sm py-1.5"><input type="checkbox" v-model="quick.seibi" class="w-5 h-5"> 整地・転圧を行う</label>
+            <button class="w-full mt-2 text-white font-bold rounded-xl py-3" style="background:var(--lcc-orange)" @click="runQuick">この内容で項目を自動生成</button>
+            <p class="text-[11px] text-gray-400 mt-1">仮設・本体・廃棄物分別・整地・諸経費を自動で内訳ツリーに追加します。</p>
+          </div>
+        </div>
 
-            <!-- 特記事項 -->
-            <div style="margin-top:18px; border:1px solid #999; padding:8px 10px; font-size:8.5pt; line-height:1.6; color:#333">
-              <div style="font-weight:700; margin-bottom:4px; color:var(--lcc-navy)">【特記事項・免責】</div>
-              <div>1. 地中障害物（既存杭・浄化槽・井戸・産業廃棄物等）が発見された場合は、別途実費にて精算いたします。</div>
-              <div>2. 処理困難物・危険物（消火器・ピアノ・大型金庫・薬品等）が追加で判明した場合は、別途追加請求とさせていただきます。</div>
-              <div>3. アスベスト（石綿）が分析調査により新たに判明した場合、除去・処分費は別途お見積りといたします。</div>
-              <div>4. 本見積に含まれない近隣補償・建築確認・各種申請費用は別途協議といたします。</div>
-              <div>5. 数量・体積は現地概算に基づくものであり、実数精算となる場合があります。</div>
-              <div>6. 廃棄物は産業廃棄物管理票（マニフェスト）に基づき適正処理いたします。</div>
-              <div>7. お支払条件：着工金として契約時に50%、完工確認後に残金50%を申し受けます。</div>
-              <div>8. 本見積書の有効期限：{{ validUntil }}</div>
+        <!-- 階層ツリー -->
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="font-bold text-gray-800 flex items-center gap-2"><span class="w-1.5 h-5 rounded" style="background:var(--lcc-orange)"></span>内訳明細（{{ activeEstimate.label }}）</h2>
+          <div class="flex gap-1.5">
+            <button class="text-xs border border-gray-300 rounded-lg px-2 py-1.5" @click="startVoice" :class="voiceOn?'bg-orange-100':''">🎤 音声</button>
+            <button class="text-xs text-white rounded-lg px-2 py-1.5" style="background:var(--lcc-navy)" @click="addGroup()">＋大項目</button>
+          </div>
+        </div>
+        <p v-if="voiceMsg" class="text-[11px] mb-2" :class="voiceErr?'text-red-500':'text-gray-500'">{{ voiceMsg }}</p>
+
+        <div v-if="activeEstimate.tree.length===0" class="card p-6 text-center text-gray-400 text-sm">明細がありません。上のクイック積算か「＋大項目」「＋項目追加」で作成します。</div>
+
+        <!-- 大項目（group） -->
+        <div v-for="(g,gi) in activeEstimate.tree" :key="g.id" class="card mb-2 overflow-hidden">
+          <div class="flex items-center gap-2 px-3 py-2.5" style="background:#eef2fa">
+            <input v-model="g.label" @input="save" class="flex-1 bg-transparent font-bold text-sm" style="color:var(--lcc-navy)">
+            <span class="text-sm font-bold" style="color:var(--lcc-navy)">{{ yen(groupSell(g)) }}</span>
+            <button class="text-gray-400 px-1" @click="removeGroup(gi)">✕</button>
+          </div>
+          <div class="p-2">
+            <!-- 小項目（item） -->
+            <div v-for="(it,ii) in g.children" :key="it.id" class="border border-gray-100 rounded-xl p-2.5 mb-2">
+              <div class="flex items-center gap-2">
+                <input v-model="it.label" @input="recalc" class="flex-1 text-sm font-semibold border-b border-dashed border-gray-200 pb-0.5">
+                <button class="text-gray-300 px-1" @click="removeItem(g,ii)">✕</button>
+              </div>
+              <div class="grid grid-cols-12 gap-1.5 mt-2 items-end">
+                <div class="col-span-3"><label class="text-[10px] text-gray-400">数量</label><input type="number" v-model.number="it.qty" inputmode="decimal" @input="recalc" class="w-full border border-gray-300 rounded-lg px-1.5 py-2 text-sm text-right"></div>
+                <div class="col-span-2"><label class="text-[10px] text-gray-400">単位</label><input v-model="it.unit" @input="save" class="w-full border border-gray-300 rounded-lg px-1 py-2 text-sm text-center"></div>
+                <div class="col-span-4"><label class="text-[10px] text-gray-400">単価(売)</label><input type="number" v-model.number="it.price" inputmode="numeric" @input="onPriceEdit(it)" class="w-full border border-gray-300 rounded-lg px-1.5 py-2 text-sm text-right"></div>
+                <div class="col-span-3 text-right"><label class="text-[10px] text-gray-400">金額</label><div class="text-sm font-bold py-2" style="color:var(--lcc-navy)">{{ yen(it.qty*it.price) }}</div></div>
+              </div>
+              <!-- 原価・粗利 行 -->
+              <div class="grid grid-cols-12 gap-1.5 mt-1 items-end">
+                <div class="col-span-5"><label class="text-[10px] text-gray-400">原価単価</label><input type="number" v-model.number="it.cost" inputmode="numeric" @input="onCostEdit(it)" class="w-full border border-gray-200 rounded-lg px-1.5 py-1.5 text-xs text-right bg-gray-50"></div>
+                <div class="col-span-3"><label class="text-[10px] text-gray-400">粗利率%</label><input type="number" v-model.number="it.marginPct" inputmode="decimal" @input="onMarginEdit(it)" class="w-full border border-gray-200 rounded-lg px-1 py-1.5 text-xs text-right bg-gray-50"></div>
+                <div class="col-span-4 text-right text-[11px]"><span class="text-gray-400">粗利</span> <b style="color:var(--lcc-orange)">{{ yen(it.qty*(it.price-it.cost)) }}</b></div>
+              </div>
+              <!-- 算出根拠 -->
+              <div v-if="it.formula||it.note" class="mt-1.5 text-[11px] bg-amber-50 border border-amber-100 rounded-lg px-2 py-1.5 text-amber-800">
+                <span class="font-bold">算出根拠：</span>{{ it.formula }}<span v-if="it.note"> ／ {{ it.note }}</span>
+              </div>
+            </div>
+            <!-- 項目追加 -->
+            <div class="flex gap-1.5">
+              <button class="flex-1 text-xs border border-dashed border-gray-300 rounded-lg py-2 text-gray-500" @click="openPicker(g)">＋ 単価マスタから追加</button>
+              <button class="text-xs border border-dashed border-gray-300 rounded-lg px-3 py-2 text-gray-500" @click="addBlankItem(g)">空項目</button>
             </div>
           </div>
         </div>
+
+        <!-- 廃棄物分別サマリー -->
+        <div v-if="wasteSummary.length" class="card p-4 mb-2">
+          <h3 class="font-bold text-gray-700 mb-2">♻️ 廃棄物 分別区分サマリー（マニフェスト連動）</h3>
+          <table class="w-full text-sm">
+            <tr v-for="w in wasteSummary" :key="w.label" class="border-b border-gray-100"><td class="py-1">{{ w.label }}</td><td class="text-right text-gray-500">{{ w.qty.toFixed(1) }}㎥</td><td class="text-right font-semibold">{{ yen(w.amount) }}</td></tr>
+          </table>
+        </div>
+
+        <!-- 集計 -->
+        <div class="card p-4 mb-2 border-l-4" style="border-color:var(--lcc-orange)">
+          <div class="flex justify-between text-sm py-0.5"><span class="text-gray-600">直接工事費（売上）</span><span class="font-bold">{{ yen(grand.sell) }}</span></div>
+          <div class="flex justify-between text-sm py-0.5"><span class="text-gray-600">諸経費（{{ settings.overhead }}%）</span><span>{{ yen(grand.overhead) }}</span></div>
+          <div class="flex justify-between text-sm py-0.5"><span class="text-gray-600">消費税（{{ settings.taxRate }}%）</span><span>{{ yen(grand.tax) }}</span></div>
+          <div class="flex justify-between py-1 mt-1 border-t border-gray-200"><span class="font-bold">税込合計</span><span class="font-black text-lg" style="color:var(--lcc-navy)">{{ yen(grand.total) }}</span></div>
+          <div class="mt-2 pt-2 border-t border-dashed border-gray-200 grid grid-cols-3 gap-1 text-center text-xs">
+            <div><div class="text-gray-400">原価計</div><div class="font-bold">{{ yen(grand.cost) }}</div></div>
+            <div><div class="text-gray-400">粗利</div><div class="font-bold" style="color:var(--lcc-orange)">{{ yen(grand.profit) }}</div></div>
+            <div><div class="text-gray-400">粗利率</div><div class="font-bold" :style="grand.marginRate>=0.25?'color:#1f8f4e':'color:#b4451f'">{{ (grand.marginRate*100).toFixed(1) }}%</div></div>
+          </div>
+        </div>
+      </template>
+    </section>
+
+    <!-- ============ パターン（松竹梅・テンプレート） ============ -->
+    <section v-show="tab==='patterns'">
+      <div v-if="!activeProject" class="card p-6 text-center text-gray-400 text-sm">
+        先に「案件」タブで案件を選択してください。
+        <button class="block mx-auto mt-3 text-white rounded-xl px-4 py-2" style="background:var(--lcc-navy)" @click="tab='projects'">案件へ</button>
+      </div>
+      <template v-else>
+        <h2 class="font-bold text-gray-800 mb-2 flex items-center gap-2"><span class="w-1.5 h-5 rounded" style="background:var(--lcc-orange)"></span>見積パターン（松竹梅提案）</h2>
+        <p class="text-xs text-gray-500 mb-2">同一案件で複数パターンを作成し、顧客に比較提案できます。</p>
+
+        <div v-for="e in activeProject.estimates" :key="e.id" class="card p-3 mb-2" :class="activeEstimateId===e.id?'ring-2':''" :style="activeEstimateId===e.id?'--tw-ring-color:var(--lcc-orange)':''">
+          <div class="flex items-center gap-2">
+            <input v-model="e.label" @input="save" class="font-bold border-b border-dashed border-gray-200 flex-1" style="color:var(--lcc-navy)">
+            <span class="text-sm font-bold">{{ yen(estimateTotal(e)) }}</span>
+          </div>
+          <div class="text-xs text-gray-400 mt-1">明細 {{ countItems(e) }}項目 ／ 粗利率 {{ (estimateMargin(e)*100).toFixed(1) }}%</div>
+          <div class="flex gap-1.5 mt-2">
+            <button class="flex-1 text-xs text-white rounded-lg py-2" style="background:var(--lcc-navy)" @click="selectEstimate(e.id); tab='estimate'">この見積を編集</button>
+            <button class="text-xs border border-gray-300 rounded-lg px-2 py-2" @click="duplicateEstimate(e)">複写</button>
+            <button class="text-xs border border-gray-300 rounded-lg px-2 py-2" @click="saveAsTemplate(e)">雛形保存</button>
+            <button class="text-xs border border-red-200 text-red-500 rounded-lg px-2 py-2" @click="delEstimate(e.id)">削除</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 mt-2">
+          <button class="text-white text-sm font-bold rounded-xl py-3" style="background:#b08d57" @click="newEstimate('松')">松 を作成</button>
+          <button class="text-white text-sm font-bold rounded-xl py-3" style="background:var(--lcc-navy)" @click="newEstimate('竹')">竹 を作成</button>
+          <button class="text-white text-sm font-bold rounded-xl py-3" style="background:#6b7280" @click="newEstimate('梅')">梅 を作成</button>
+        </div>
+
+        <!-- テンプレート引用 -->
+        <div class="card p-4 mt-3">
+          <h3 class="font-bold text-gray-700 mb-2">過去見積テンプレートから引用</h3>
+          <div v-if="templates.length===0" class="text-sm text-gray-400">保存済みの雛形はありません。各見積の「雛形保存」で登録できます。</div>
+          <div v-for="t in templates" :key="t.id" class="flex items-center gap-2 border-b border-gray-100 py-2">
+            <span class="text-sm flex-1">{{ t.name }}</span>
+            <button class="text-xs text-white rounded-lg px-3 py-1.5" style="background:var(--lcc-orange)" @click="useTemplate(t)">引用して新規</button>
+            <button class="text-xs text-red-400" @click="delTemplate(t.id)">✕</button>
+          </div>
+        </div>
+      </template>
+    </section>
+
+    <!-- ============ 写真・図面台帳 ============ -->
+    <section v-show="tab==='photos'">
+      <div v-if="!activeProject" class="card p-6 text-center text-gray-400 text-sm">先に案件を選択してください。</div>
+      <template v-else>
+        <h2 class="font-bold text-gray-800 mb-2 flex items-center gap-2"><span class="w-1.5 h-5 rounded" style="background:var(--lcc-orange)"></span>現場写真・図面台帳</h2>
+        <label class="card p-4 mb-3 flex flex-col items-center justify-center text-center cursor-pointer border-2 border-dashed border-gray-300">
+          <span class="text-3xl">📷</span>
+          <span class="text-sm font-bold text-gray-600 mt-1">写真・図面を追加</span>
+          <span class="text-[11px] text-gray-400">カメラ撮影 / ライブラリ選択</span>
+          <input type="file" accept="image/*" multiple class="hidden" @change="addPhotos">
+        </label>
+
+        <!-- AI写真積算（枠組み） -->
+        <div class="card p-3 mb-3 flex items-center gap-3">
+          <span class="text-2xl">🤖</span>
+          <div class="flex-1">
+            <div class="text-sm font-bold text-gray-700">AI写真積算 <span class="pill badge-soon ml-1">準備中</span></div>
+            <div class="text-[11px] text-gray-400">写真から体積・数量を自動推定（API連携予定）</div>
+          </div>
+          <button class="text-xs border border-gray-300 rounded-lg px-2 py-1.5 text-gray-400" @click="toastMsg('AI写真積算は今後のアップデートで対応予定です')">試す</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div v-for="ph in activeProject.photos" :key="ph.id" class="card overflow-hidden">
+            <img :src="ph.dataUrl" class="w-full h-32 object-cover" @click="previewPhoto=ph">
+            <div class="p-2">
+              <input v-model="ph.memo" @input="save" placeholder="メモ" class="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5">
+              <div class="flex justify-between items-center mt-1">
+                <select v-model="ph.kind" @change="save" class="text-[11px] border border-gray-200 rounded px-1 py-1 bg-white">
+                  <option>現場写真</option><option>図面</option><option>Before</option><option>After</option><option>残置物</option>
+                </select>
+                <button class="text-[11px] text-red-400" @click="delPhoto(ph.id)">削除</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </section>
+
+    <!-- ============ 見積書プレビュー ============ -->
+    <section v-show="tab==='quote'">
+      <div v-if="!activeEstimate" class="card p-6 text-center text-gray-400 text-sm">見積を選択してください。</div>
+      <template v-else>
+        <!-- 出力アクション -->
+        <div class="grid grid-cols-4 gap-1.5 mb-2 no-print">
+          <button class="text-white text-xs font-bold rounded-xl py-2.5" style="background:var(--lcc-navy)" @click="doPrint">PDF/印刷</button>
+          <button class="text-xs font-bold rounded-xl py-2.5 border border-gray-300" @click="exportExcel">Excel</button>
+          <button class="text-xs font-bold rounded-xl py-2.5 border border-gray-300" @click="exportCSV">CSV</button>
+          <button class="text-white text-xs font-bold rounded-xl py-2.5" style="background:#06c755" @click="shareLine">LINE共有</button>
+        </div>
+        <!-- レイアウト切替 -->
+        <div class="flex items-center gap-2 mb-2 no-print text-xs">
+          <span class="text-gray-500">配色</span>
+          <button v-for="th in ['navy','orange','mono']" :key="th" @click="quoteTheme=th" class="w-7 h-7 rounded-full border-2" :class="quoteTheme===th?'border-gray-700':'border-transparent'" :style="'background:'+themeColor(th)"></button>
+          <label class="flex items-center gap-1 ml-2"><input type="checkbox" v-model="quoteShowSeal" class="w-4 h-4">社印枠</label>
+          <label class="flex items-center gap-1 ml-1"><input type="checkbox" v-model="quoteShowBasis" class="w-4 h-4">根拠列</label>
+        </div>
+        <p class="text-[11px] text-gray-500 mb-2 no-print">下のA4プレビューは横スクロールで全体確認できます。原価・粗利は顧客向け見積書には印字されません。</p>
+
+        <div class="overflow-auto bg-gray-300 p-2 rounded-xl" style="-webkit-overflow-scrolling:touch">
+          <div id="printArea" class="print-area">
+            <div class="a4 shadow-lg">
+              <div style="text-align:center; margin-bottom:10px">
+                <div :style="'font-size:22pt;font-weight:900;letter-spacing:.4em;border-bottom:3px double '+themeColor(quoteTheme)+';display:inline-block;padding:0 20px 4px;color:'+themeColor(quoteTheme)">御　見　積　書</div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px">
+                <div style="width:55%">
+                  <div style="font-size:15pt;font-weight:700;border-bottom:1.5px solid #333;padding-bottom:4px">{{ quoteCustomer.name || '　　　　　　' }} 様</div>
+                  <div style="margin-top:8px;font-size:10pt;line-height:1.6">
+                    <div v-if="activeProject">工事名称：{{ activeProject.name }}（{{ activeEstimate.label }}）</div>
+                    <div v-if="activeProject && activeProject.site">現場：{{ activeProject.site }}</div>
+                  </div>
+                  <div style="margin-top:14px;font-size:10pt">下記の通りお見積もり申し上げます。</div>
+                  <div :style="'margin-top:10px;border:2px solid '+themeColor('orange')+';padding:8px;text-align:center;border-radius:4px'">
+                    <span style="font-size:11pt">御見積金額（税込）</span>
+                    <span :style="'font-size:18pt;font-weight:900;margin-left:10px;color:'+themeColor(quoteTheme)">{{ yen(grand.total) }}</span>
+                  </div>
+                </div>
+                <div style="width:42%;font-size:9.5pt;line-height:1.7;text-align:right">
+                  <div>見積日：{{ dateStr }}</div>
+                  <div>有効期限：{{ validUntil }}</div>
+                  <div :style="'margin-top:8px;display:inline-block;border:2px solid '+themeColor('orange')+';border-radius:5px;padding:6px 10px;text-align:right'">
+                    <div :style="'font-size:13pt;font-weight:800;color:'+themeColor(quoteTheme)">{{ settings.company.name }}</div>
+                    <div>{{ settings.company.address }}</div>
+                    <div>TEL：{{ settings.company.tel }}</div>
+                    <div v-if="settings.company.person">担当：{{ settings.company.person }}</div>
+                    <div v-if="quoteShowSeal" style="margin-top:6px;width:46px;height:46px;border:1px solid #c33;border-radius:4px;color:#c33;font-size:8pt;display:inline-flex;align-items:center;justify-content:center">社印</div>
+                  </div>
+                </div>
+              </div>
+
+              <table class="est-tbl">
+                <thead>
+                  <tr :style="'background:'+themeColor(quoteTheme)+';color:#fff'">
+                    <th style="text-align:left" :style="quoteShowBasis?'width:34%':'width:48%'">摘要</th>
+                    <th v-if="quoteShowBasis" style="width:18%">算出根拠</th>
+                    <th style="width:12%">数量</th><th style="width:8%">単位</th><th style="width:14%">単価</th><th style="width:14%">金額</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template v-for="g in activeEstimate.tree" :key="g.id">
+                    <tr class="cat-row"><td :colspan="quoteShowBasis?6:5">【{{ g.label }}】</td></tr>
+                    <tr v-for="it in g.children" :key="it.id">
+                      <td style="text-align:left">{{ it.label }}</td>
+                      <td v-if="quoteShowBasis" style="font-size:8pt;color:#555">{{ it.formula }}</td>
+                      <td style="text-align:right">{{ (it.qty||0).toLocaleString('ja-JP') }}</td>
+                      <td style="text-align:center">{{ it.unit }}</td>
+                      <td style="text-align:right">{{ yen(it.price) }}</td>
+                      <td style="text-align:right">{{ yen(it.qty*it.price) }}</td>
+                    </tr>
+                    <tr><td :colspan="quoteShowBasis?5:4" style="text-align:right;font-size:9pt;color:#555">小計</td><td style="text-align:right;font-weight:700">{{ yen(groupSell(g)) }}</td></tr>
+                  </template>
+                </tbody>
+              </table>
+
+              <div style="display:flex;justify-content:flex-end;margin-top:10px">
+                <table style="width:55%;font-size:10.5pt">
+                  <tr><td style="border:1px solid #444;padding:5px 8px">直接工事費</td><td style="border:1px solid #444;padding:5px 8px;text-align:right">{{ yen(grand.sell) }}</td></tr>
+                  <tr><td style="border:1px solid #444;padding:5px 8px">諸経費（{{ settings.overhead }}%）</td><td style="border:1px solid #444;padding:5px 8px;text-align:right">{{ yen(grand.overhead) }}</td></tr>
+                  <tr><td style="border:1px solid #444;padding:5px 8px;font-weight:700;background:#eef2fa">小計</td><td style="border:1px solid #444;padding:5px 8px;text-align:right;font-weight:700;background:#eef2fa">{{ yen(grand.subtotal) }}</td></tr>
+                  <tr><td style="border:1px solid #444;padding:5px 8px">消費税（{{ settings.taxRate }}%）</td><td style="border:1px solid #444;padding:5px 8px;text-align:right">{{ yen(grand.tax) }}</td></tr>
+                  <tr><td :style="'border:2px solid '+themeColor('orange')+';padding:7px 8px;font-weight:800;background:#fff6ec'">合計（税込）</td><td :style="'border:2px solid '+themeColor('orange')+';padding:7px 8px;text-align:right;font-weight:900;font-size:13pt;background:#fff6ec;color:'+themeColor(quoteTheme)">{{ yen(grand.total) }}</td></tr>
+                </table>
+              </div>
+
+              <div style="margin-top:18px;border:1px solid #999;padding:8px 10px;font-size:8.5pt;line-height:1.6;color:#333">
+                <div :style="'font-weight:700;margin-bottom:4px;color:'+themeColor(quoteTheme)">【特記事項・免責】</div>
+                <div>1. 地中障害物（既存杭・浄化槽・井戸・産業廃棄物等）が発見された場合は、別途実費にて精算いたします。</div>
+                <div>2. 処理困難物・危険物が追加で判明した場合は、別途追加請求とさせていただきます。</div>
+                <div>3. アスベスト（石綿）が分析調査により新たに判明した場合、除去・処分費は別途お見積りといたします。</div>
+                <div>4. 数量・体積は現地概算に基づくものであり、実数精算となる場合があります。</div>
+                <div>5. 廃棄物は産業廃棄物管理票（マニフェスト）に基づき適正処理いたします。</div>
+                <div>6. お支払条件：着工金として契約時に50%、完工確認後に残金50%を申し受けます。</div>
+                <div>7. 本見積書の有効期限：{{ validUntil }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 共有・開封通知（枠組み） -->
+        <div class="card p-4 mt-3 no-print">
+          <h3 class="font-bold text-gray-700 mb-2">Web共有リンク・開封通知 <span class="pill badge-soon">枠組み</span></h3>
+          <button class="w-full text-white rounded-xl py-2.5 mb-2" style="background:var(--lcc-navy)" @click="makeShareLink">共有リンクを発行</button>
+          <div v-if="activeProject && activeProject.shareLog.length" class="text-xs text-gray-600 space-y-1">
+            <div v-for="(s,i) in activeProject.shareLog" :key="i" class="flex justify-between border-b border-gray-100 py-1">
+              <span class="truncate flex-1">{{ s.url }}</span>
+              <span :class="s.opened?'text-green-600':'text-gray-400'">{{ s.opened?'開封済':'未開封' }}</span>
+            </div>
+          </div>
+          <p class="text-[11px] text-gray-400 mt-1">実際の開封検知はサーバー連携が必要なため、本枠組みではリンク発行と履歴管理のみ行います。</p>
+        </div>
+
+        <!-- 電子契約・請求変換 -->
+        <div class="card p-4 mt-3 no-print">
+          <h3 class="font-bold text-gray-700 mb-2">契約・請求アクション</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <button class="border border-gray-300 rounded-xl py-2.5 text-sm" @click="tab='docs'; docType='invoice'">→ 請求書に変換</button>
+            <button class="border border-gray-300 rounded-xl py-2.5 text-sm" @click="tab='docs'; docType='receipt'">→ 領収書に変換</button>
+            <button class="border border-gray-300 rounded-xl py-2.5 text-sm text-gray-400 col-span-2" @click="toastMsg('電子契約サービス連携は今後対応予定です')">電子契約で送信 <span class="pill badge-soon">準備中</span></button>
+          </div>
+        </div>
+      </template>
+    </section>
+
+    <!-- ============ 帳票 ============ -->
+    <section v-show="tab==='docs'">
+      <div v-if="!activeEstimate" class="card p-6 text-center text-gray-400 text-sm">見積を選択してください。</div>
+      <template v-else>
+        <h2 class="font-bold text-gray-800 mb-2 flex items-center gap-2"><span class="w-1.5 h-5 rounded" style="background:var(--lcc-orange)"></span>帳票・書類の自動生成</h2>
+        <div class="grid grid-cols-3 gap-1.5 mb-3 no-print">
+          <button v-for="d in docTypes" :key="d.key" @click="docType=d.key" class="rounded-xl py-2.5 text-xs font-bold border" :class="docType===d.key?'text-white border-transparent':'bg-white text-gray-600 border-gray-300'" :style="docType===d.key?'background:var(--lcc-navy)':''">{{ d.label }}</button>
+        </div>
+        <button class="w-full text-white font-bold rounded-xl py-2.5 mb-3 no-print" style="background:var(--lcc-navy)" @click="doPrint">この書類を印刷 / PDF</button>
+
+        <div class="overflow-auto bg-gray-300 p-2 rounded-xl" style="-webkit-overflow-scrolling:touch">
+          <div id="printArea" class="print-area">
+            <div class="a4 shadow-lg">
+              <!-- 作業手順書 -->
+              <div v-if="docType==='procedure'">
+                <h1 style="text-align:center;font-size:18pt;font-weight:900;color:var(--lcc-navy);margin-bottom:4px">作業手順書</h1>
+                <div style="text-align:center;font-size:9pt;color:#555;margin-bottom:14px">{{ activeProject.name }}　／　{{ settings.company.name }}</div>
+                <table class="est-tbl"><thead><tr style="background:var(--lcc-navy);color:#fff"><th style="width:8%">No</th><th style="text-align:left">作業工程</th><th style="text-align:left;width:42%">手順・注意事項</th></tr></thead>
+                  <tbody><tr v-for="(s,i) in procedureSteps" :key="i"><td style="text-align:center">{{ i+1 }}</td><td style="text-align:left;font-weight:700">{{ s.title }}</td><td style="text-align:left;font-size:8.5pt">{{ s.note }}</td></tr></tbody>
+                </table>
+                <div style="margin-top:12px;font-size:8.5pt;border:1px solid #999;padding:8px">※本手順書は見積内容から自動生成しています。現場状況に応じて職長が最終判断してください。</div>
+              </div>
+
+              <!-- チェックリスト -->
+              <div v-if="docType==='checklist'">
+                <h1 style="text-align:center;font-size:18pt;font-weight:900;color:var(--lcc-navy);margin-bottom:4px">作業確認チェックリスト</h1>
+                <div style="text-align:center;font-size:9pt;color:#555;margin-bottom:14px">{{ activeProject.name }}（品質管理・クレーム防止）</div>
+                <table class="est-tbl"><thead><tr style="background:var(--lcc-navy);color:#fff"><th style="width:8%">☑</th><th style="text-align:left">確認項目</th><th style="width:18%">確認者</th><th style="width:16%">日付</th></tr></thead>
+                  <tbody><tr v-for="(c,i) in checklistItems" :key="i"><td style="text-align:center;font-size:13pt">☐</td><td style="text-align:left">{{ c }}</td><td></td><td></td></tr></tbody>
+                </table>
+              </div>
+
+              <!-- 工程表 -->
+              <div v-if="docType==='schedule'">
+                <h1 style="text-align:center;font-size:18pt;font-weight:900;color:var(--lcc-navy);margin-bottom:4px">工程表（概算）</h1>
+                <div style="text-align:center;font-size:9pt;color:#555;margin-bottom:6px">{{ activeProject.name }}　想定工期：{{ scheduleTotalDays }}日</div>
+                <table class="est-tbl"><thead><tr style="background:var(--lcc-navy);color:#fff"><th style="text-align:left;width:30%">工程</th><th style="width:14%">日数</th><th style="text-align:left">日程バー（1マス=1日）</th></tr></thead>
+                  <tbody><tr v-for="(s,i) in scheduleSteps" :key="i"><td style="text-align:left;font-weight:700">{{ s.title }}</td><td style="text-align:center">{{ s.days }}日</td>
+                    <td style="text-align:left"><span :style="'display:inline-block;height:12px;background:var(--lcc-orange);border-radius:2px;margin-left:'+(s.offset*14)+'px;width:'+(s.days*14)+'px'"></span></td></tr></tbody>
+                </table>
+                <div style="margin-top:10px;font-size:8.5pt">※天候・廃棄物搬出状況により変動します。建設リサイクル法対象工事は着手7日前までに届出が必要です。</div>
+              </div>
+
+              <!-- アスベスト事前調査票 -->
+              <div v-if="docType==='asbestos'">
+                <h1 style="text-align:center;font-size:16pt;font-weight:900;color:var(--lcc-navy);margin-bottom:4px">石綿事前調査結果報告書（兼 調査票）</h1>
+                <table class="est-tbl" style="font-size:9pt">
+                  <tr><td style="width:30%;background:#eef2fa;font-weight:700">工事名称</td><td>{{ activeProject.name }}</td></tr>
+                  <tr><td style="background:#eef2fa;font-weight:700">工事場所</td><td>{{ activeProject.site }}</td></tr>
+                  <tr><td style="background:#eef2fa;font-weight:700">施工者</td><td>{{ settings.company.name }}　{{ settings.company.address }}　TEL {{ settings.company.tel }}</td></tr>
+                  <tr><td style="background:#eef2fa;font-weight:700">調査年月日</td><td>{{ dateStr }}</td></tr>
+                  <tr><td style="background:#eef2fa;font-weight:700">調査方法</td><td>□ 書面調査　□ 目視調査　□ 分析調査（試料採取）</td></tr>
+                  <tr><td style="background:#eef2fa;font-weight:700">石綿含有の有無</td><td>□ 有（除去・処分を別途計上）　□ 無　□ みなし含有として処理</td></tr>
+                  <tr><td style="background:#eef2fa;font-weight:700">対象建材</td><td style="font-size:8.5pt">スレート屋根材／外壁サイディング／ビニル床タイル／石膏ボード／断熱材 等</td></tr>
+                </table>
+                <div style="margin-top:10px;font-size:8.5pt;border:1px solid #999;padding:8px">※解体・改修工事は石綿障害予防規則により事前調査と結果の届出（一定規模以上）が義務付けられています。本票は社内記録・届出補助用の様式です。</div>
+              </div>
+
+              <!-- 建設リサイクル法 届出書 -->
+              <div v-if="docType==='recycle'">
+                <h1 style="text-align:center;font-size:15pt;font-weight:900;color:var(--lcc-navy);margin-bottom:4px">建設リサイクル法 分別解体等の計画等（届出様式）</h1>
+                <table class="est-tbl" style="font-size:9pt">
+                  <tr><td style="width:30%;background:#eef2fa;font-weight:700">工事の名称</td><td>{{ activeProject.name }}</td></tr>
+                  <tr><td style="background:#eef2fa;font-weight:700">工事の場所</td><td>{{ activeProject.site }}</td></tr>
+                  <tr><td style="background:#eef2fa;font-weight:700">発注者</td><td>{{ quoteCustomer.name }} 様</td></tr>
+                  <tr><td style="background:#eef2fa;font-weight:700">元請業者</td><td>{{ settings.company.name }}</td></tr>
+                  <tr><td style="background:#eef2fa;font-weight:700">建築物の構造</td><td>{{ quick.struct }}　延床 {{ quick.area }}㎡</td></tr>
+                  <tr><td style="background:#eef2fa;font-weight:700">特定建設資材廃棄物</td><td style="font-size:8.5pt">コンクリート／木材／アスファルト・コンクリート／その他（混合廃棄物）</td></tr>
+                  <tr><td style="background:#eef2fa;font-weight:700">分別解体等の方法</td><td style="font-size:8.5pt">手作業＋機械併用。発生材は品目ごとに分別し再資源化施設へ搬出。</td></tr>
+                </table>
+                <div style="margin-top:10px;font-size:8.5pt;border:1px solid #999;padding:8px">※床面積80㎡以上の解体等は着手7日前までに都道府県知事への届出が必要です（建設リサイクル法第10条）。本様式は記入補助用です。</div>
+              </div>
+
+              <!-- マニフェスト・家電リサイクル券 -->
+              <div v-if="docType==='manifest'">
+                <h1 style="text-align:center;font-size:16pt;font-weight:900;color:var(--lcc-navy);margin-bottom:4px">産業廃棄物管理票（マニフェスト）集計 ／ 家電リサイクル券</h1>
+                <h3 style="font-size:11pt;font-weight:700;margin:8px 0 4px">■ 産業廃棄物 排出予定</h3>
+                <table class="est-tbl" style="font-size:9pt"><thead><tr style="background:var(--lcc-navy);color:#fff"><th style="text-align:left">廃棄物の種類</th><th style="width:18%">予定数量</th><th style="width:24%">処分先（記入欄）</th></tr></thead>
+                  <tbody><tr v-for="w in wasteSummary" :key="w.label"><td style="text-align:left">{{ w.label }}</td><td style="text-align:right">{{ w.qty.toFixed(1) }} ㎥</td><td></td></tr>
+                  <tr v-if="wasteSummary.length===0"><td colspan="3" style="text-align:center;color:#999">廃棄物項目がありません</td></tr></tbody>
+                </table>
+                <h3 style="font-size:11pt;font-weight:700;margin:12px 0 4px">■ 家電リサイクル券 対象機器</h3>
+                <table class="est-tbl" style="font-size:9pt"><thead><tr style="background:var(--lcc-navy);color:#fff"><th style="text-align:left">品目</th><th style="width:18%">台数</th><th style="width:24%">管理票番号</th></tr></thead>
+                  <tbody><tr v-for="k in kadenSummary" :key="k.label"><td style="text-align:left">{{ k.label }}</td><td style="text-align:right">{{ k.qty }} 台</td><td></td></tr>
+                  <tr v-if="kadenSummary.length===0"><td colspan="3" style="text-align:center;color:#999">家電4品目の計上がありません</td></tr></tbody>
+                </table>
+              </div>
+
+              <!-- 請求書 / 領収書 -->
+              <div v-if="docType==='invoice' || docType==='receipt'">
+                <h1 :style="'text-align:center;font-size:20pt;font-weight:900;letter-spacing:.3em;color:'+themeColor('navy')+';margin-bottom:10px'">{{ docType==='invoice'?'請　求　書':'領　収　書' }}</h1>
+                <div style="display:flex;justify-content:space-between;margin-bottom:14px">
+                  <div style="width:55%">
+                    <div style="font-size:15pt;font-weight:700;border-bottom:1.5px solid #333;padding-bottom:4px">{{ quoteCustomer.name || '　　　　' }} 様</div>
+                    <div :style="'margin-top:12px;border:2px solid '+themeColor('orange')+';padding:8px;text-align:center;border-radius:4px'">
+                      <span style="font-size:11pt">{{ docType==='invoice'?'ご請求金額':'領収金額' }}（税込）</span>
+                      <span :style="'font-size:18pt;font-weight:900;margin-left:8px;color:'+themeColor('navy')">{{ yen(grand.total) }}</span>
+                    </div>
+                    <div v-if="docType==='receipt'" style="margin-top:10px;font-size:10pt">但し、{{ activeProject.name }} 代金として　上記正に領収いたしました。</div>
+                  </div>
+                  <div style="width:42%;font-size:9.5pt;text-align:right;line-height:1.7">
+                    <div>{{ docType==='invoice'?'請求日':'発行日' }}：{{ dateStr }}</div>
+                    <div v-if="docType==='invoice'">お支払期限：{{ validUntil }}</div>
+                    <div :style="'margin-top:8px;display:inline-block;border:2px solid '+themeColor('orange')+';border-radius:5px;padding:6px 10px;text-align:right'">
+                      <div :style="'font-size:13pt;font-weight:800;color:'+themeColor('navy')">{{ settings.company.name }}</div>
+                      <div>{{ settings.company.address }}</div><div>TEL：{{ settings.company.tel }}</div>
+                    </div>
+                  </div>
+                </div>
+                <table class="est-tbl"><thead><tr style="background:var(--lcc-navy);color:#fff"><th style="text-align:left">摘要</th><th style="width:14%">数量</th><th style="width:8%">単位</th><th style="width:14%">単価</th><th style="width:16%">金額</th></tr></thead>
+                  <tbody>
+                    <template v-for="g in activeEstimate.tree" :key="g.id"><tr class="cat-row"><td colspan="5">【{{ g.label }}】</td></tr>
+                      <tr v-for="it in g.children" :key="it.id"><td style="text-align:left">{{ it.label }}</td><td style="text-align:right">{{ (it.qty||0).toLocaleString('ja-JP') }}</td><td style="text-align:center">{{ it.unit }}</td><td style="text-align:right">{{ yen(it.price) }}</td><td style="text-align:right">{{ yen(it.qty*it.price) }}</td></tr>
+                    </template>
+                  </tbody></table>
+                <div style="display:flex;justify-content:flex-end;margin-top:10px"><table style="width:50%;font-size:10.5pt">
+                  <tr><td style="border:1px solid #444;padding:5px 8px">小計</td><td style="border:1px solid #444;padding:5px 8px;text-align:right">{{ yen(grand.subtotal) }}</td></tr>
+                  <tr><td style="border:1px solid #444;padding:5px 8px">消費税（{{ settings.taxRate }}%）</td><td style="border:1px solid #444;padding:5px 8px;text-align:right">{{ yen(grand.tax) }}</td></tr>
+                  <tr><td :style="'border:2px solid '+themeColor('orange')+';padding:7px 8px;font-weight:800;background:#fff6ec'">合計</td><td :style="'border:2px solid '+themeColor('orange')+';padding:7px 8px;text-align:right;font-weight:900;font-size:13pt;background:#fff6ec;color:'+themeColor('navy')">{{ yen(grand.total) }}</td></tr>
+                </table></div>
+                <div v-if="docType==='invoice'" style="margin-top:14px;font-size:9pt;border:1px solid #999;padding:8px">お振込先：（金融機関名・支店・口座番号を設定してください）　／　振込手数料は御社にてご負担願います。</div>
+                <div v-if="docType==='receipt'" style="margin-top:30px;text-align:center;font-size:9pt;color:#777">収入印紙（5万円以上の場合）</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </section>
+
+    <!-- ============ 設定 ============ -->
+    <section v-show="tab==='settings'">
+      <h2 class="font-bold text-gray-800 mb-2 flex items-center gap-2"><span class="w-1.5 h-5 rounded" style="background:var(--lcc-orange)"></span>設定</h2>
+
+      <!-- 自社情報 -->
+      <div class="card p-4 mb-3">
+        <h3 class="font-bold text-gray-700 mb-2">自社情報</h3>
+        <label class="block text-xs text-gray-500 mb-1">会社名</label>
+        <input v-model="settings.company.name" @input="save" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 mb-2">
+        <label class="block text-xs text-gray-500 mb-1">住所</label>
+        <input v-model="settings.company.address" @input="save" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 mb-2">
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="block text-xs text-gray-500 mb-1">TEL</label><input v-model="settings.company.tel" @input="save" inputmode="tel" class="w-full border border-gray-300 rounded-xl px-3 py-2.5"></div>
+          <div><label class="block text-xs text-gray-500 mb-1">担当者</label><input v-model="settings.company.person" @input="save" class="w-full border border-gray-300 rounded-xl px-3 py-2.5"></div>
+        </div>
+      </div>
+
+      <!-- 計算条件 -->
+      <div class="card p-4 mb-3">
+        <h3 class="font-bold text-gray-700 mb-2">計算条件</h3>
+        <div class="grid grid-cols-3 gap-2">
+          <div><label class="block text-xs text-gray-500 mb-1">諸経費率%</label><input type="number" v-model.number="settings.overhead" @input="save" inputmode="decimal" class="w-full border border-gray-300 rounded-xl px-2 py-2.5 text-right"></div>
+          <div><label class="block text-xs text-gray-500 mb-1">消費税%</label><input type="number" v-model.number="settings.taxRate" @input="save" inputmode="decimal" class="w-full border border-gray-300 rounded-xl px-2 py-2.5 text-right"></div>
+          <div><label class="block text-xs text-gray-500 mb-1">有効期限(日)</label><input type="number" v-model.number="settings.validDays" @input="save" inputmode="numeric" class="w-full border border-gray-300 rounded-xl px-2 py-2.5 text-right"></div>
+        </div>
+      </div>
+
+      <!-- 単価マスタ -->
+      <div class="card p-4 mb-3">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="font-bold text-gray-700">単価マスタ（原価・粗利）</h3>
+          <button class="text-xs text-white rounded-lg px-3 py-1.5" style="background:var(--lcc-navy)" @click="addRate">＋追加</button>
+        </div>
+        <input v-model="rateSearch" placeholder="検索（品名・カテゴリ）" class="w-full border border-gray-300 rounded-xl px-3 py-2 mb-2 text-sm">
+        <div v-for="cat in rateCats" :key="cat" class="mb-2">
+          <details class="acc">
+            <summary class="font-bold text-sm py-1.5 px-2 rounded-lg flex items-center justify-between" style="background:#f3f6fc;color:var(--lcc-navy)">
+              <span>{{ cat }}</span><span class="text-xs text-gray-400">{{ filteredRates.filter(r=>r.cat===cat).length }}項目</span>
+            </summary>
+            <div class="pt-2">
+              <div v-for="r in filteredRates.filter(x=>x.cat===cat)" :key="r.id" class="border border-gray-100 rounded-xl p-2 mb-2">
+                <input v-model="r.label" @input="save" class="w-full text-sm font-semibold border-b border-dashed border-gray-200 pb-1 mb-1.5">
+                <div class="grid grid-cols-12 gap-1 items-end">
+                  <div class="col-span-3"><label class="text-[10px] text-gray-400">単位</label><input v-model="r.unit" @input="save" class="w-full border border-gray-200 rounded px-1 py-1.5 text-xs text-center"></div>
+                  <div class="col-span-3"><label class="text-[10px] text-gray-400">原価</label><input type="number" v-model.number="r.cost" @input="syncRate(r)" inputmode="numeric" class="w-full border border-gray-200 rounded px-1 py-1.5 text-xs text-right"></div>
+                  <div class="col-span-3"><label class="text-[10px] text-gray-400">粗利%</label><input type="number" v-model.number="r.marginPct" @input="syncRate(r)" inputmode="decimal" class="w-full border border-gray-200 rounded px-1 py-1.5 text-xs text-right"></div>
+                  <div class="col-span-3"><label class="text-[10px] text-gray-400">売単価</label><input type="number" v-model.number="r.price" @input="syncRatePrice(r)" inputmode="numeric" class="w-full border border-gray-200 rounded px-1 py-1.5 text-xs text-right font-bold"></div>
+                </div>
+                <div class="flex items-center justify-between mt-1">
+                  <input v-model="r.note" @input="save" placeholder="算出根拠・係数の説明" class="flex-1 text-[11px] border border-gray-100 rounded px-2 py-1 bg-amber-50 mr-2">
+                  <button class="text-[11px] text-red-400" @click="delRate(r.id)">削除</button>
+                </div>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- クラウド同期（GAS/PWA）枠組み -->
+      <div class="card p-4 mb-3">
+        <h3 class="font-bold text-gray-700 mb-2">クラウド同期（Googleスプレッドシート / GAS）<span class="pill badge-soon">枠組み</span></h3>
+        <label class="block text-xs text-gray-500 mb-1">GAS WebアプリURL</label>
+        <input v-model="settings.gasUrl" @input="save" placeholder="https://script.google.com/macros/s/.../exec" class="w-full border border-gray-300 rounded-xl px-3 py-2.5 mb-2 text-sm">
+        <div class="grid grid-cols-2 gap-2">
+          <button class="border border-gray-300 rounded-xl py-2.5 text-sm" @click="syncUp">↑ アップロード同期</button>
+          <button class="border border-gray-300 rounded-xl py-2.5 text-sm" @click="syncDown">↓ ダウンロード同期</button>
+        </div>
+        <p class="text-[11px] text-gray-400 mt-1">URL未設定時はローカル（LocalStorage）のみで動作。GAS側でdoPost/doGetを実装すると経営の聖書スプレッドシートと連携できます。</p>
+      </div>
+
+      <!-- 承認ワークフロー枠組み -->
+      <div class="card p-4 mb-3">
+        <h3 class="font-bold text-gray-700 mb-2">社内承認ワークフロー <span class="pill badge-soon">枠組み</span></h3>
+        <div v-if="activeProject">
+          <div v-for="(a,i) in activeProject.approvals" :key="i" class="flex items-center gap-2 border-b border-gray-100 py-2 text-sm">
+            <span class="flex-1">{{ a.step }}</span>
+            <select v-model="a.status" @change="save" class="border border-gray-300 rounded-lg px-2 py-1 text-xs bg-white"><option>未承認</option><option>承認済</option><option>差戻</option></select>
+          </div>
+        </div>
+        <p v-else class="text-sm text-gray-400">案件を選択すると承認ステップが表示されます。</p>
+      </div>
+
+      <!-- 協力業者ポータル枠組み -->
+      <div class="card p-4 mb-3">
+        <h3 class="font-bold text-gray-700 mb-2">協力業者向け簡易入力ポータル <span class="pill badge-soon">枠組み</span></h3>
+        <p class="text-sm text-gray-500 mb-2">協力業者が数量だけを入力できる簡易モード。下のボタンでこの端末を「業者モード」に切替（単価・粗利を非表示）。</p>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" v-model="vendorMode" @change="save" class="w-5 h-5"> 業者モード（原価・粗利・単価マスタを隠す）</label>
+      </div>
+
+      <div class="card p-4 mb-3">
+        <h3 class="font-bold text-gray-700 mb-2">データ管理</h3>
+        <div class="grid grid-cols-2 gap-2">
+          <button class="border border-gray-300 rounded-xl py-2.5 text-sm" @click="exportBackup">バックアップ書出</button>
+          <label class="border border-gray-300 rounded-xl py-2.5 text-sm text-center cursor-pointer">復元読込<input type="file" accept="application/json" class="hidden" @change="importBackup"></label>
+        </div>
+        <button class="w-full border border-red-200 text-red-500 rounded-xl py-2.5 text-sm mt-2" @click="resetAll">全データ初期化</button>
       </div>
     </section>
 
     </main>
 
-    <!-- ===== トースト ===== -->
-    <div v-if="toast" class="fixed left-1/2 -translate-x-1/2 bottom-24 bg-black/85 text-white text-sm px-4 py-2 rounded-full z-40 no-print">{{ toast }}</div>
+    <!-- ===== 単価マスタピッカー モーダル ===== -->
+    <div v-if="picker.open" class="fixed inset-0 z-40 bg-black/40 flex items-end no-print" @click.self="picker.open=false">
+      <div class="bg-white w-full rounded-t-3xl max-h-[80vh] flex flex-col">
+        <div class="p-3 border-b border-gray-100 flex items-center gap-2">
+          <input v-model="picker.q" placeholder="単価マスタを検索" class="flex-1 border border-gray-300 rounded-xl px-3 py-2.5">
+          <button class="text-gray-400 px-2" @click="picker.open=false">閉じる</button>
+        </div>
+        <div class="overflow-auto p-2">
+          <div v-for="r in pickerResults" :key="r.id" class="flex items-center gap-2 border-b border-gray-100 py-2.5 px-1" @click="pickRate(r)">
+            <div class="flex-1">
+              <div class="text-sm font-semibold">{{ r.label }}</div>
+              <div class="text-[11px] text-gray-400">{{ r.cat }} ／ {{ yen(r.price) }}/{{ r.unit }}（粗利{{ r.marginPct }}%）</div>
+            </div>
+            <span class="text-white text-xs rounded-lg px-3 py-1.5" style="background:var(--lcc-orange)">追加</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 写真拡大 -->
+    <div v-if="previewPhoto" class="fixed inset-0 z-50 bg-black/90 flex items-center justify-center no-print" @click="previewPhoto=null">
+      <img :src="previewPhoto.dataUrl" class="max-w-full max-h-full object-contain">
+    </div>
 
     <!-- ===== ボトムナビ ===== -->
-    <nav class="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200 z-30 nav-safe no-print shadow-[0_-2px_10px_rgba(0,0,0,0.06)]">
-      <div class="grid grid-cols-4 max-w-2xl mx-auto">
-        <button class="py-2.5 flex flex-col items-center gap-0.5" :class="tab==='demo'?'tab-active':'text-gray-400'" @click="tab='demo'">
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
-          <span class="text-[11px] font-semibold">解体</span>
-        </button>
-        <button class="py-2.5 flex flex-col items-center gap-0.5" :class="tab==='clean'?'tab-active':'text-gray-400'" @click="tab='clean'">
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg>
-          <span class="text-[11px] font-semibold">片付け</span>
-        </button>
-        <button class="py-2.5 flex flex-col items-center gap-0.5" :class="tab==='settings'?'tab-active':'text-gray-400'" @click="tab='settings'">
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          <span class="text-[11px] font-semibold">設定</span>
-        </button>
-        <button class="py-2.5 flex flex-col items-center gap-0.5" :class="tab==='preview'?'tab-active':'text-gray-400'" @click="tab='preview'">
-          <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8M8 9h2"/></svg>
-          <span class="text-[11px] font-semibold">見積書</span>
+    <nav class="fixed bottom-0 inset-x-0 z-30 bg-white border-t border-gray-200 nav-safe no-print" style="box-shadow:0 -2px 10px rgba(0,0,0,.05)">
+      <div class="max-w-2xl mx-auto grid grid-cols-7">
+        <button v-for="n in navItems" :key="n.key" @click="tab=n.key" class="flex flex-col items-center py-2 text-[10px]" :class="tab===n.key?'tab-active font-bold':'text-gray-400'">
+          <span class="text-lg leading-none" :style="tab===n.key?'filter:none':''">{{ n.icon }}</span>
+          <span class="mt-0.5">{{ n.label }}</span>
+          <span v-if="tab===n.key" class="w-5 h-0.5 rounded-full mt-0.5" style="background:var(--lcc-orange)"></span>
         </button>
       </div>
     </nav>
+
+    <!-- トースト -->
+    <div v-if="toast" class="fixed left-1/2 -translate-x-1/2 z-50 text-white text-sm px-4 py-2.5 rounded-full no-print" style="bottom:96px;background:rgba(10,42,94,.95)">{{ toast }}</div>
+
   </div>
-  `
-});
-app.mount('#app');
+</div>
+
+<script>
+const { createApp } = Vue;
+
+// ===== 既定単価マスタ（出雲市相場・原価・粗利率付き） =====
+const DEFAULT_RATES = [
+  ['仮設工事','外部足場（クサビ式）','㎡',1000,700,'外周面積×単価。単管＋メッシュシート'],
+  ['仮設工事','内部足場','㎡',800,560,'屋内解体用の足場'],
+  ['仮設工事','防音・養生シート','㎡',600,360,'足場面に張る防音・防塵シート'],
+  ['仮設工事','重機回送費','式',60000,42000,'0.4t〜3t重機の往復運搬'],
+  ['仮設工事','敷鉄板リース','枚',8000,6000,'進入路・地盤養生'],
+  ['解体本体工事','木造解体（上屋）','㎡',9000,6300,'延床面積×単価。出雲坪4.2万円実勢'],
+  ['解体本体工事','基礎撤去','㎡',3500,2450,'布基礎・ベタ基礎の撤去'],
+  ['解体本体工事','S造解体（上屋）','㎡',15000,10500,'鉄骨切断・搬出'],
+  ['解体本体工事','RC造解体','㎡',25000,18000,'重機＋大型ブレーカー'],
+  ['解体本体工事','内装解体（スケルトン）','㎡',6000,4200,'店舗・住宅内装の撤去'],
+  ['外構・付帯解体','ブロック塀撤去','㎡',3500,2300,'基礎共'],
+  ['外構・付帯解体','土間コン撤去','㎡',2500,1750,'厚10cm想定'],
+  ['外構・付帯解体','樹木伐根（中木）','本',8000,5000,'高さ3〜5m。処分込'],
+  ['外構・付帯解体','庭撤去（植栽伐根込）','㎡',2500,1700,'庭石は別途'],
+  ['外構・付帯解体','カーポート撤去','台',25000,16000,'アルミ＋基礎撤去'],
+  ['外構・付帯解体','既存ドア・建具撤去','箇所',5000,3000,'既存ドア撤去実績'],
+  ['外構・付帯解体','浄化槽・便槽撤去','式',30000,20000,'汲取＋砂充填'],
+  ['外構・付帯解体','物置撤去','棟',30000,20000,'スチール物置'],
+  ['外構新設','カーポート1台用','台',180000,130000,'本体＋基礎＋組立'],
+  ['外構新設','カーポート2台用','台',320000,240000,'本体＋基礎＋組立'],
+  ['外構新設','テラス屋根（ソラリエ）','式',130000,95000,'YKKAPソラリエ相当 工事込'],
+  ['外構新設','フェンスN8型','m',18000,12500,'三協アルミN8型 工事込'],
+  ['外構新設','土間コン目地工事','m',1500,1000,'伸縮目地施工'],
+  ['外構新設','境界ブロック復旧','m',6000,4200,'2〜3段積み'],
+  ['外構新設','土間コンクリート打設','㎡',9000,6500,'ワイヤーメッシュ込'],
+  ['草刈・剪定','草刈り','㎡',300,180,'刈払＋処分'],
+  ['草刈・剪定','防草シート施工','㎡',1000,650,'材工。耐久シート'],
+  ['草刈・剪定','人工芝セット工事','㎡',6000,4200,'防草シート＋人工芝'],
+  ['草刈・剪定','砕石敷き（防草シート込）','㎡',3500,2400,'厚50mm'],
+  ['草刈・剪定','剪定工事（中木）','本',5000,3000,'3m未満。処分込'],
+  ['廃棄物運搬処分','コンガラ処分（がれき類）','㎥',5500,4000,'安定型処分場'],
+  ['廃棄物運搬処分','木くず処分','㎥',6000,4300,'分別で単価減'],
+  ['廃棄物運搬処分','混合廃棄物処分','㎥',12000,9000,'管理型処分場'],
+  ['廃棄物運搬処分','廃プラ処分','㎥',10000,7500,'プラスチック類'],
+  ['廃棄物運搬処分','金属くず処分','㎥',3000,1500,'有価で安価'],
+  ['廃棄物運搬処分','石膏ボード処分','㎥',9000,6500,'管理型処分場'],
+  ['廃棄物運搬処分','ガラス・陶磁器くず','㎥',8000,5800,'安定型'],
+  ['整地','整地・転圧','㎡',700,450,'重機ならし・転圧'],
+  ['整地','残土搬出処分','㎥',6000,4200,'残土処分'],
+  ['調査・諸経費','石綿事前調査費','式',50000,35000,'分析調査含む'],
+  ['調査・諸経費','石綿（レベル3）処分','㎡',3000,2100,'スレート等'],
+  ['調査・諸経費','マニフェスト・リサイクル法届出','式',15000,8000,'届出書類作成'],
+  ['調査・諸経費','警備員（交通誘導）','人日',18000,14000,'交通誘導警備'],
+  ['片付け・残置','一般残置物撤去','㎥',8000,5500,'体積×状態係数'],
+  ['片付け・残置','エアコン（リサイクル）','台',4990,4990,'法定。運搬込実費'],
+  ['片付け・残置','テレビ16型以上','台',6470,6470,'法定実費'],
+  ['片付け・残置','冷蔵庫171L以上','台',8730,8730,'法定実費'],
+  ['片付け・残置','洗濯機・乾燥機','台',6530,6530,'法定実費'],
+  ['片付け・残置','処理困難物（マットレス等）','個',5000,3000,'マットレス・ピアノ等'],
+  ['リフォーム・美装','建物美装（クリーニング）','㎡',1200,800,'退去・引渡前'],
+  ['リフォーム・美装','システムバス取替','式',900000,720000,'標準グレード'],
+  ['リフォーム・美装','食器洗い乾燥機取替','式',120000,90000,'ビルトイン'],
+];
+function buildRates(){
+  return DEFAULT_RATES.map((r,i)=>{
+    const [cat,label,unit,price,cost,note]=r;
+    const marginPct = price>0 ? Math.round((1-cost/price)*1000)/10 : 0;
+    return { id:'rate'+i, cat,label,unit,price,cost,marginPct,note };
+  });
+}
+// 廃棄物分別係数（延床1㎡あたり㎥）
+const WASTE_COEF = {
+  '木造':{'コンガラ処分（がれき類）':0.20,'木くず処分':0.28,'混合廃棄物処分':0.05,'石膏ボード処分':0.03},
+  'S造':{'コンガラ処分（がれき類）':0.15,'金属くず処分':0.10,'混合廃棄物処分':0.05},
+  'RC造':{'コンガラ処分（がれき類）':0.45,'金属くず処分':0.03,'混合廃棄物処分':0.04},
+  '内装':{'混合廃棄物処分':0.08,'木くず処分':0.05,'石膏ボード処分':0.04},
+};
+const uid = ()=> Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+
+const STORE='lcc_v2_db';
+createApp({
+  data(){
+    return {
+      showOpening:true, opHide:false,
+      tab:'projects', docType:'procedure',
+      pipeFilter:'', rateSearch:'',
+      quoteTheme:'navy', quoteShowSeal:true, quoteShowBasis:false,
+      previewPhoto:null, toast:'', voiceOn:false, voiceMsg:'', voiceErr:false,
+      picker:{ open:false, q:'', group:null },
+      vendorMode:false,
+      // 永続データ
+      settings:{ company:{ name:'LCC株式会社', address:'島根県出雲市知井宮町137番地2', tel:'0853-27-9320', person:'' }, overhead:10, taxRate:10, validDays:30, gasUrl:'' },
+      rates:[], customers:[], projects:[], templates:[],
+      activeProjectId:'', activeEstimateId:'',
+      quick:{ area:30, floors:2, struct:'木造', asbestos:false, seibi:true }, quickOpen:true,
+      pipelineStages:[
+        {key:'lead',label:'見込',color:'#9ca3af'},
+        {key:'visit',label:'現調',color:'#0ea5e9'},
+        {key:'quote',label:'見積提出',color:'#1d6fe0'},
+        {key:'contract',label:'受注',color:'#16a34a'},
+        {key:'inprogress',label:'施工中',color:'#f59e0b'},
+        {key:'done',label:'完工',color:'#0a2a5e'},
+        {key:'lost',label:'失注',color:'#ef4444'},
+      ],
+      navItems:[
+        {key:'projects',label:'案件',icon:'📋'},
+        {key:'estimate',label:'積算',icon:'🧮'},
+        {key:'patterns',label:'提案',icon:'🌳'},
+        {key:'photos',label:'写真',icon:'📷'},
+        {key:'quote',label:'見積書',icon:'📄'},
+        {key:'docs',label:'帳票',icon:'📑'},
+        {key:'settings',label:'設定',icon:'⚙️'},
+      ],
+      docTypes:[
+        {key:'procedure',label:'作業手順書'},{key:'checklist',label:'チェック'},{key:'schedule',label:'工程表'},
+        {key:'asbestos',label:'石綿調査票'},{key:'recycle',label:'リサイクル法'},{key:'manifest',label:'マニフェスト'},
+        {key:'invoice',label:'請求書'},{key:'receipt',label:'領収書'},
+      ],
+    };
+  },
+  computed:{
+    activeProject(){ return this.projects.find(p=>p.id===this.activeProjectId)||null; },
+    activeEstimate(){ const p=this.activeProject; if(!p) return null; return p.estimates.find(e=>e.id===this.activeEstimateId)||null; },
+    filteredProjects(){ return this.pipeFilter? this.projects.filter(p=>p.status===this.pipeFilter): this.projects; },
+    rateCats(){ const s=new Set(this.filteredRates.map(r=>r.cat)); return [...s]; },
+    filteredRates(){ const q=this.rateSearch.trim(); if(!q) return this.rates; return this.rates.filter(r=>(r.label+r.cat+(r.note||'')).includes(q)); },
+    pickerResults(){ const q=this.picker.q.trim(); const a=q?this.rates.filter(r=>(r.label+r.cat).includes(q)):this.rates; return a; },
+    dateStr(){ const d=new Date(); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; },
+    validUntil(){ const d=new Date(); d.setDate(d.getDate()+(this.settings.validDays||30)); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; },
+    quoteCustomer(){ const p=this.activeProject; if(!p) return {name:''}; return this.customers.find(c=>c.id===p.customerId)||{name:''}; },
+    grand(){
+      const e=this.activeEstimate;
+      let sell=0,cost=0;
+      if(e){ e.tree.forEach(g=> (g.children||[]).forEach(it=>{ sell+=(it.qty||0)*(it.price||0); cost+=(it.qty||0)*(it.cost||0); })); }
+      const overhead=Math.round(sell*(this.settings.overhead||0)/100);
+      const subtotal=sell+overhead;
+      const tax=Math.round(subtotal*(this.settings.taxRate||0)/100);
+      const total=subtotal+tax;
+      const profit=sell-cost; // 諸経費は粗利に含めず直接工事ベースで表示
+      const marginRate= sell>0? profit/sell : 0;
+      return { sell,cost,overhead,subtotal,tax,total,profit,marginRate };
+    },
+    wasteSummary(){
+      const e=this.activeEstimate; if(!e) return [];
+      const map={};
+      e.tree.forEach(g=> (g.children||[]).forEach(it=>{
+        if(it.cat==='廃棄物運搬処分'){ map[it.label]=map[it.label]||{label:it.label,qty:0,amount:0}; map[it.label].qty+=(it.qty||0); map[it.label].amount+=(it.qty||0)*(it.price||0); }
+      }));
+      return Object.values(map);
+    },
+    kadenSummary(){
+      const e=this.activeEstimate; if(!e) return [];
+      const names=['エアコン（リサイクル）','テレビ16型以上','冷蔵庫171L以上','洗濯機・乾燥機'];
+      const arr=[];
+      e.tree.forEach(g=> (g.children||[]).forEach(it=>{ if(names.includes(it.label)&&(it.qty||0)>0) arr.push({label:it.label,qty:it.qty}); }));
+      return arr;
+    },
+    procedureSteps(){
+      const e=this.activeEstimate; const steps=[]; if(!e) return steps;
+      const has=(kw)=> e.tree.some(g=>(g.children||[]).some(it=>it.label.includes(kw)));
+      steps.push({title:'事前準備・近隣挨拶',note:'近隣挨拶、ライフライン（電気・ガス・水道）停止確認、作業計画・KY活動の実施。'});
+      if(has('調査')||this.quick.asbestos) steps.push({title:'石綿事前調査',note:'対象建材の調査・記録。レベル3建材は湿潤化のうえ手ばらしで撤去。'});
+      if(has('足場')||has('養生')) steps.push({title:'仮設・養生設置',note:'足場組立、防音・防塵シート設置。隣地・通行人の安全確保。'});
+      if(has('内装')||has('残置')) steps.push({title:'内装・残置物撤去',note:'分別しながら手ばらし。家電4品目はリサイクル券処理。'});
+      if(has('解体')) steps.push({title:'上屋解体',note:'重機・手壊し併用。散水で粉塵抑制。分別しながら搬出。'});
+      if(has('基礎')) steps.push({title:'基礎・土間撤去',note:'基礎をブレーカーで斫り、ガラを場外搬出。地中障害物の有無を確認。'});
+      steps.push({title:'廃棄物分別・搬出',note:'品目ごとに分別し、マニフェストを発行のうえ許可業者へ搬出。'});
+      if(has('整地')) steps.push({title:'整地・転圧',note:'重機で整地・転圧し、引渡し状態に仕上げ。'});
+      steps.push({title:'完了確認・引渡し',note:'チェックリストで最終確認。発注者立会い、写真記録、清掃。'});
+      return steps;
+    },
+    checklistItems(){
+      const e=this.activeEstimate; const base=[
+        '近隣挨拶を実施したか','ライフラインの停止・撤去を確認したか','石綿事前調査の記録を保管したか',
+        '養生・防塵対策は十分か','散水による粉塵抑制を行ったか','作業員のKY・安全帯・保護具を確認したか',
+        '廃棄物を品目ごとに分別したか','マニフェストを正しく発行したか','家電4品目のリサイクル券処理を行ったか',
+        '地中障害物の有無を確認・記録したか','整地・転圧の仕上がりは良好か','現場周辺・道路の清掃を行ったか',
+        '完了写真（Before/After）を撮影したか','発注者の立会い確認を得たか'];
+      return base;
+    },
+    scheduleSteps(){
+      const e=this.activeEstimate; if(!e) return [];
+      const area=this.quick.area||30;
+      const steps=[]; let off=0;
+      const add=(title,days)=>{ steps.push({title,days,offset:off}); off+=days; };
+      add('準備・近隣挨拶・届出',1);
+      add('仮設・養生',1);
+      if(e.tree.some(g=>(g.children||[]).some(it=>it.label.includes('内装')||it.label.includes('残置')))) add('内装・残置撤去',Math.max(1,Math.round(area/60)));
+      add('上屋解体',Math.max(1,Math.round(area/40)));
+      add('基礎・廃材搬出',Math.max(1,Math.round(area/80)));
+      if(e.tree.some(g=>(g.children||[]).some(it=>it.label.includes('整地')))) add('整地・転圧',1);
+      add('完了確認・清掃',1);
+      return steps;
+    },
+    scheduleTotalDays(){ return this.scheduleSteps.reduce((a,s)=>a+s.days,0); },
+  },
+
+  methods:{
+    yen(n){ n=Math.round(n||0); return '¥'+n.toLocaleString('ja-JP'); },
+    fmtDate(ts){ if(!ts) return '-'; const d=new Date(ts); return `${d.getMonth()+1}/${d.getDate()}`; },
+    themeColor(t){ return t==='orange'?'#ff7a18': t==='mono'?'#333333':'#0a2a5e'; },
+    toastMsg(m){ this.toast=m; clearTimeout(this._t); this._t=setTimeout(()=>this.toast='',2200); },
+    skipOpening(){ this.opHide=true; setTimeout(()=>this.showOpening=false,650); },
+    // ---- 永続化 ----
+    save(){
+      const db={ settings:this.settings, rates:this.rates, customers:this.customers, projects:this.projects, templates:this.templates, activeProjectId:this.activeProjectId, activeEstimateId:this.activeEstimateId, vendorMode:this.vendorMode };
+      try{ localStorage.setItem(STORE, JSON.stringify(db)); }catch(e){ console.warn(e); }
+    },
+    load(){
+      try{
+        const raw=localStorage.getItem(STORE);
+        if(!raw){ this.rates=buildRates(); this.seedDemo(); return; }
+        const db=JSON.parse(raw);
+        Object.assign(this.settings, db.settings||{});
+        this.rates=(db.rates&&db.rates.length)?db.rates:buildRates();
+        this.customers=db.customers||[]; this.projects=db.projects||[]; this.templates=db.templates||[];
+        this.activeProjectId=db.activeProjectId||''; this.activeEstimateId=db.activeEstimateId||''; this.vendorMode=!!db.vendorMode;
+      }catch(e){ this.rates=buildRates(); }
+    },
+    seedDemo(){
+      const c={ id:uid(), name:'サンプル太郎', kana:'', tel:'', address:'島根県出雲市', note:'' };
+      this.customers=[c];
+      const p=this.newProjectObj(); p.name='サンプル様邸 解体工事'; p.customerId=c.id; p.site='出雲市知井宮町'; p.status='quote';
+      this.projects=[p]; this.activeProjectId=p.id;
+      this.save();
+    },
+    // ---- 案件 ----
+    newProjectObj(){
+      return { id:uid(), customerId:'', name:'', site:'', lat:null,lng:null, status:'lead', createdAt:Date.now(), updatedAt:Date.now(),
+        estimates:[], photos:[], approvals:[{step:'担当者作成',status:'未承認'},{step:'上長確認',status:'未承認'},{step:'社長承認',status:'未承認'}], shareLog:[] };
+    },
+    newProject(){ const p=this.newProjectObj(); this.projects.unshift(p); this.activeProjectId=p.id; this.activeEstimateId=''; this.save(); this.toastMsg('案件を作成しました'); },
+    selectProject(id){ this.activeProjectId=id; const p=this.activeProject; this.activeEstimateId=(p&&p.estimates[0])?p.estimates[0].id:''; this.save(); },
+    delProject(id){ if(!confirm('この案件を削除しますか？')) return; this.projects=this.projects.filter(p=>p.id!==id); if(this.activeProjectId===id) this.activeProjectId=''; this.save(); },
+    touch(p){ p.updatedAt=Date.now(); this.save(); },
+    projectTotal(p){ let t=0; p.estimates.forEach(e=> t=Math.max(t,this.estimateGrand(e).total)); return t; },
+    stageLabel(k){ const s=this.pipelineStages.find(x=>x.key===k); return s?s.label:k; },
+    stageColor(k){ const s=this.pipelineStages.find(x=>x.key===k); return s?s.color:'#999'; },
+    customerName(id){ const c=this.customers.find(x=>x.id===id); return c?c.name:''; },
+    openMap(p){ const q=encodeURIComponent(p.site||p.name||'出雲市'); window.open('https://www.google.com/maps/search/?api=1&query='+q,'_blank'); },
+    // ---- 顧客 ----
+    newCustomer(){ const c={ id:uid(), name:'新規顧客', kana:'', tel:'', address:'', note:'' }; this.customers.unshift(c); if(this.activeProject&&!this.activeProject.customerId) this.activeProject.customerId=c.id; this.save(); },
+    delCustomer(id){ this.customers=this.customers.filter(c=>c.id!==id); this.save(); },
+    // ---- 見積（松竹梅） ----
+    newEstimate(label){ const p=this.activeProject; if(!p) return; const e={ id:uid(), label:label+'案', tree:[], createdAt:Date.now() }; p.estimates.push(e); this.activeEstimateId=e.id; this.touch(p); this.toastMsg(label+'案を作成しました'); this.tab='estimate'; },
+    selectEstimate(id){ this.activeEstimateId=id; this.save(); },
+    duplicateEstimate(e){ const p=this.activeProject; const copy=JSON.parse(JSON.stringify(e)); copy.id=uid(); copy.label=e.label+'(複写)'; this.reidTree(copy.tree); p.estimates.push(copy); this.touch(p); this.toastMsg('複写しました'); },
+    delEstimate(id){ const p=this.activeProject; p.estimates=p.estimates.filter(e=>e.id!==id); if(this.activeEstimateId===id) this.activeEstimateId=p.estimates[0]?p.estimates[0].id:''; this.touch(p); },
+    estimateGrand(e){ let sell=0,cost=0; e.tree.forEach(g=>(g.children||[]).forEach(it=>{ sell+=(it.qty||0)*(it.price||0); cost+=(it.qty||0)*(it.cost||0); })); const oh=Math.round(sell*(this.settings.overhead||0)/100); const sub=sell+oh; const tax=Math.round(sub*(this.settings.taxRate||0)/100); return {sell,cost,total:sub+tax}; },
+    estimateTotal(e){ return this.estimateGrand(e).total; },
+    estimateMargin(e){ const g=this.estimateGrand(e); return g.sell>0?(g.sell-g.cost)/g.sell:0; },
+    countItems(e){ return e.tree.reduce((a,g)=>a+(g.children?g.children.length:0),0); },
+    reidTree(tree){ tree.forEach(g=>{ g.id=uid(); (g.children||[]).forEach(it=>it.id=uid()); }); },
+    // ---- テンプレート ----
+    saveAsTemplate(e){ const name=prompt('雛形名を入力',e.label+' 雛形'); if(!name) return; this.templates.push({ id:uid(), name, tree:JSON.parse(JSON.stringify(e.tree)) }); this.save(); this.toastMsg('雛形を保存しました'); },
+    useTemplate(t){ const p=this.activeProject; if(!p) return; const e={ id:uid(), label:t.name+'から作成', tree:JSON.parse(JSON.stringify(t.tree)), createdAt:Date.now() }; this.reidTree(e.tree); p.estimates.push(e); this.activeEstimateId=e.id; this.touch(p); this.tab='estimate'; this.toastMsg('雛形を引用しました'); },
+    delTemplate(id){ this.templates=this.templates.filter(t=>t.id!==id); this.save(); },
+    // ---- ツリー編集 ----
+    addGroup(label){ const e=this.activeEstimate; if(!e) return; e.tree.push({ id:uid(), type:'group', label:label||'新しい大項目', children:[] }); this.save(); },
+    removeGroup(gi){ this.activeEstimate.tree.splice(gi,1); this.save(); },
+    groupSell(g){ return (g.children||[]).reduce((a,it)=>a+(it.qty||0)*(it.price||0),0); },
+    findGroup(g){ return this.activeEstimate.tree.find(x=>x.id===g.id); },
+    addBlankItem(g){ g.children.push({ id:uid(), type:'item', label:'新規項目', qty:1, unit:'式', price:0, cost:0, marginPct:30, cat:g.label, formula:'', note:'' }); this.save(); },
+    removeItem(g,ii){ g.children.splice(ii,1); this.save(); },
+    onPriceEdit(it){ if(it.price>0){ it.marginPct=Math.round((1-it.cost/it.price)*1000)/10; } this.save(); },
+    onCostEdit(it){ if(it.price>0){ it.marginPct=Math.round((1-it.cost/it.price)*1000)/10; } this.save(); },
+    onMarginEdit(it){ const m=(it.marginPct||0)/100; if(m<1){ it.price=Math.round(it.cost/(1-m)); } this.save(); },
+    recalc(){ this.save(); },
+    // ---- 単価マスタピッカー ----
+    openPicker(g){ this.picker.open=true; this.picker.q=''; this.picker.group=g.id; },
+    pickRate(r){
+      const e=this.activeEstimate; let g=e.tree.find(x=>x.id===this.picker.group);
+      if(!g){ g={id:uid(),type:'group',label:r.cat,children:[]}; e.tree.push(g); }
+      g.children.push({ id:uid(), type:'item', label:r.label, qty:1, unit:r.unit, price:r.price, cost:r.cost, marginPct:r.marginPct, cat:r.cat, formula:'数量1 × '+this.yen(r.price), note:r.note });
+      this.picker.open=false; this.save(); this.toastMsg(r.label+' を追加');
+    },
+    // ---- クイック積算 ----
+    runQuick(){
+      const e=this.activeEstimate; if(!e){ this.toastMsg('先に見積パターンを作成してください'); return; }
+      const a=this.quick.area||0, st=this.quick.struct;
+      const rget=(label)=> this.rates.find(r=>r.label===label);
+      const mkItem=(label,qty,formula)=>{ const r=rget(label); if(!r) return null; return { id:uid(),type:'item',label:r.label,qty:Math.round(qty*10)/10,unit:r.unit,price:r.price,cost:r.cost,marginPct:r.marginPct,cat:r.cat,formula,note:r.note }; };
+      const groups={};
+      const push=(it)=>{ if(!it) return; groups[it.cat]=groups[it.cat]||{id:uid(),type:'group',label:it.cat,children:[]}; groups[it.cat].children.push(it); };
+      // 外周面積概算（足場）：延床から簡易推定 √(area)×4×階高3m
+      const perim=Math.sqrt(Math.max(a,1))*4; const scaffold=perim*3*(this.quick.floors||1);
+      push(mkItem('外部足場（クサビ式）',scaffold,`外周√${a}×4×高さ${3*(this.quick.floors||1)}m ≒ ${Math.round(scaffold)}㎡`));
+      push(mkItem('防音・養生シート',scaffold,`足場面 ${Math.round(scaffold)}㎡`));
+      push(mkItem('重機回送費',1,'重機運搬 往復1式'));
+      // 本体
+      if(st==='木造'){ push(mkItem('木造解体（上屋）',a,`延床${a}㎡ × 単価`)); push(mkItem('基礎撤去',a*0.9,`延床${a}㎡ × 0.9（1階床面積概算）`)); }
+      else if(st==='S造'){ push(mkItem('S造解体（上屋）',a,`延床${a}㎡ × 単価`)); push(mkItem('基礎撤去',a*0.9,`延床${a}㎡ × 0.9`)); }
+      else if(st==='RC造'){ push(mkItem('RC造解体',a,`延床${a}㎡ × 単価`)); }
+      else if(st==='内装'){ push(mkItem('内装解体（スケルトン）',a,`対象${a}㎡ × 単価`)); }
+      // 廃棄物分別（係数自動）
+      const coef=WASTE_COEF[st]||{};
+      Object.keys(coef).forEach(label=>{ const vol=a*coef[label]; push(mkItem(label,vol,`延床${a}㎡ × 係数${coef[label]} = ${(Math.round(vol*10)/10)}㎥`)); });
+      // 石綿
+      if(this.quick.asbestos){ push(mkItem('石綿事前調査費',1,'事前調査 1式')); push(mkItem('石綿（レベル3）処分',a*0.5,`屋根面 ${a}㎡×0.5 概算`)); }
+      // 整地
+      if(this.quick.seibi){ push(mkItem('整地・転圧',a*0.9,`敷地概算 ${a}㎡×0.9`)); }
+      // 諸経費・届出
+      push(mkItem('マニフェスト・リサイクル法届出',1,'届出書類 1式'));
+      // 既存ツリーへ統合（同カテゴリは追記）
+      Object.values(groups).forEach(ng=>{ let eg=e.tree.find(x=>x.label===ng.label); if(eg){ eg.children.push(...ng.children); } else { e.tree.push(ng); } });
+      this.save(); this.tab='estimate'; this.toastMsg('クイック積算で項目を生成しました');
+    },
+
+    // ---- 写真 ----
+    addPhotos(ev){
+      const files=[...ev.target.files]; const p=this.activeProject; if(!p) return;
+      files.forEach(f=>{
+        const reader=new FileReader();
+        reader.onload=()=>{
+          // 縮小してLocalStorage節約
+          const img=new Image();
+          img.onload=()=>{
+            const max=1000; let {width,height}=img; if(width>max){ height=height*max/width; width=max; }
+            const cv=document.createElement('canvas'); cv.width=width; cv.height=height;
+            cv.getContext('2d').drawImage(img,0,0,width,height);
+            const dataUrl=cv.toDataURL('image/jpeg',0.7);
+            p.photos.push({ id:uid(), name:f.name, dataUrl, memo:'', kind:'現場写真' }); this.touch(p);
+          };
+          img.src=reader.result;
+        };
+        reader.readAsDataURL(f);
+      });
+      ev.target.value='';
+    },
+    delPhoto(id){ const p=this.activeProject; p.photos=p.photos.filter(x=>x.id!==id); this.touch(p); },
+    // ---- 音声入力 ----
+    startVoice(){
+      const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+      if(!SR){ this.voiceErr=true; this.voiceMsg='この端末は音声入力に未対応です（iOS Safariは一部制限あり）。'; return; }
+      const e=this.activeEstimate; if(!e){ this.toastMsg('見積を選択してください'); return; }
+      const rec=new SR(); rec.lang='ja-JP'; rec.interimResults=false; this.voiceOn=true; this.voiceErr=false; this.voiceMsg='お話しください（例：木造解体 30平米）…';
+      rec.onresult=(ev)=>{ const text=ev.results[0][0].transcript; this.voiceMsg='認識：「'+text+'」'; this.applyVoice(text); };
+      rec.onerror=(ev)=>{ this.voiceErr=true; this.voiceMsg='音声認識エラー：'+ev.error; this.voiceOn=false; };
+      rec.onend=()=>{ this.voiceOn=false; };
+      rec.start();
+    },
+    applyVoice(text){
+      // テキストから単価マスタ名と数値を抽出して追加
+      const num=(text.match(/[0-9０-９]+(\.[0-9]+)?/)||[])[0];
+      const qty=num? parseFloat(num.replace(/[０-９]/g,d=>'０１２３４５６７８９'.indexOf(d))) : 1;
+      const hit=this.rates.find(r=> text.includes(r.label) || (r.label.length>3 && text.includes(r.label.slice(0,3))) );
+      if(!hit){ this.voiceMsg+=' → 該当する単価が見つかりませんでした。'; return; }
+      const e=this.activeEstimate; let g=e.tree.find(x=>x.label===hit.cat); if(!g){ g={id:uid(),type:'group',label:hit.cat,children:[]}; e.tree.push(g); }
+      g.children.push({ id:uid(),type:'item',label:hit.label,qty,unit:hit.unit,price:hit.price,cost:hit.cost,marginPct:hit.marginPct,cat:hit.cat,formula:`音声入力 数量${qty} × ${this.yen(hit.price)}`,note:hit.note });
+      this.save(); this.voiceMsg+=` → 「${hit.label}」を数量${qty}で追加しました。`;
+    },
+    // ---- 出力 ----
+    doPrint(){ window.print(); },
+    csvEscape(s){ s=(''+s).replace(/"/g,'""'); return /[",\n]/.test(s)?'"'+s+'"':s; },
+    buildRows(){
+      const e=this.activeEstimate; const rows=[['カテゴリ','摘要','数量','単位','単価','金額','算出根拠']];
+      e.tree.forEach(g=> (g.children||[]).forEach(it=> rows.push([g.label,it.label,it.qty,it.unit,it.price,(it.qty||0)*(it.price||0),it.formula||'']) ));
+      rows.push(['','直接工事費','','','',this.grand.sell,'']);
+      rows.push(['','諸経費('+this.settings.overhead+'%)','','','',this.grand.overhead,'']);
+      rows.push(['','消費税('+this.settings.taxRate+'%)','','','',this.grand.tax,'']);
+      rows.push(['','合計(税込)','','','',this.grand.total,'']);
+      return rows;
+    },
+    exportCSV(){
+      const rows=this.buildRows();
+      const csv='\uFEFF'+rows.map(r=>r.map(c=>this.csvEscape(c)).join(',')).join('\n');
+      this.download(csv,'見積_'+(this.activeProject?this.activeProject.name:'')+'.csv','text/csv');
+    },
+    exportExcel(){
+      // SpreadsheetML(.xls) 簡易出力
+      const rows=this.buildRows();
+      let body=rows.map((r,i)=>'<tr>'+r.map(c=>`<td>${(''+c).replace(/&/g,'&amp;').replace(/</g,'&lt;')}</td>`).join('')+'</tr>').join('');
+      const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"></head><body><table border="1">${body}</table></body></html>`;
+      this.download(html,'見積_'+(this.activeProject?this.activeProject.name:'')+'.xls','application/vnd.ms-excel');
+    },
+    download(content,filename,mime){
+      const blob=new Blob([content],{type:mime+';charset=utf-8'});
+      const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+      this.toastMsg(filename+' を書き出しました');
+    },
+    shareLine(){
+      const t=this.activeProject?this.activeProject.name:'御見積';
+      const msg=`【${this.settings.company.name}】${t}\n御見積金額（税込）：${this.yen(this.grand.total)}\n有効期限：${this.validUntil}`;
+      const url='https://line.me/R/share?text='+encodeURIComponent(msg);
+      if(navigator.share){ navigator.share({title:'御見積書',text:msg}).catch(()=>window.open(url,'_blank')); }
+      else window.open(url,'_blank');
+    },
+    makeShareLink(){
+      const p=this.activeProject; if(!p) return;
+      const url=location.origin+location.pathname+'#q='+p.id; p.shareLog.unshift({url,at:Date.now(),opened:false}); this.touch(p);
+      if(navigator.clipboard) navigator.clipboard.writeText(url);
+      this.toastMsg('共有リンクを発行・コピーしました');
+    },
+    // ---- 単価マスタCRUD ----
+    addRate(){ this.rates.unshift({ id:uid(), cat:'調査・諸経費', label:'新規項目', unit:'式', price:0, cost:0, marginPct:30, note:'' }); this.save(); },
+    delRate(id){ this.rates=this.rates.filter(r=>r.id!==id); this.save(); },
+    syncRate(r){ if(r.price>0) r.marginPct=Math.round((1-r.cost/r.price)*1000)/10; this.save(); },
+    syncRatePrice(r){ if(r.price>0) r.marginPct=Math.round((1-r.cost/r.price)*1000)/10; this.save(); },
+    // ---- 同期（GAS枠組み） ----
+    syncUp(){
+      if(!this.settings.gasUrl){ this.toastMsg('GAS URLが未設定です'); return; }
+      const db={ settings:this.settings, rates:this.rates, customers:this.customers, projects:this.projects, templates:this.templates };
+      fetch(this.settings.gasUrl,{method:'POST',body:JSON.stringify(db)}).then(()=>this.toastMsg('アップロード同期しました')).catch(()=>this.toastMsg('同期に失敗しました（GAS側の実装が必要です）'));
+    },
+    syncDown(){
+      if(!this.settings.gasUrl){ this.toastMsg('GAS URLが未設定です'); return; }
+      fetch(this.settings.gasUrl).then(r=>r.json()).then(db=>{ if(db.projects) this.projects=db.projects; if(db.customers) this.customers=db.customers; if(db.rates) this.rates=db.rates; this.save(); this.toastMsg('ダウンロード同期しました'); }).catch(()=>this.toastMsg('同期に失敗しました（GAS側の実装が必要です）'));
+    },
+    // ---- バックアップ ----
+    exportBackup(){ const db=localStorage.getItem(STORE)||'{}'; this.download(db,'LCC見積_backup_'+new Date().toISOString().slice(0,10)+'.json','application/json'); },
+    importBackup(ev){ const f=ev.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ try{ localStorage.setItem(STORE,r.result); this.load(); this.toastMsg('復元しました'); }catch(e){ this.toastMsg('復元に失敗しました'); } }; r.readAsText(f); ev.target.value=''; },
+    resetAll(){ if(!confirm('全データを初期化します。よろしいですか？')) return; localStorage.removeItem(STORE); location.reload(); },
+  },
+  mounted(){
+    this.load();
+    setTimeout(()=>{ this.opHide=true; setTimeout(()=>this.showOpening=false,650); }, 2600);
+    // 自動保存（変更監視）
+    this.$watch(()=>[this.settings,this.projects,this.customers,this.rates,this.templates], ()=>{ this.save(); }, {deep:true});
+  }
+}).mount('#app');
 </script>
+<style>[v-cloak]{display:none}</style>
 </body>
 </html>
